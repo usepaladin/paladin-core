@@ -1,4 +1,4 @@
-package paladin.paladincore
+package paladin.core
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication

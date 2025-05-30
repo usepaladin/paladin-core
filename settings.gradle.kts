@@ -1,1 +1,1 @@
-rootProject.name = "paladin-core"
+rootProject.name = "core"
