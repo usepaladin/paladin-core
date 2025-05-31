@@ -25,10 +25,15 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
-    implementation("org.springframework.boot:spring-boot-starter-security")
+
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
+
+    // Security/JWT
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server:3.5.0")
+    implementation("org.springframework.security:spring-security-oauth2-jose:6.5.0")
 
     // Swagger/OpenAPI
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6")
@@ -49,6 +54,7 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql")
 
     // Testing
+    testImplementation("com.nimbusds:nimbus-jose-jwt:9.37")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.springframework.security:spring-security-test")
