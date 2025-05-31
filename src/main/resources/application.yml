@@ -1,5 +1,13 @@
 spring:
   application:
     name: core
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_AUTH_URL}
 server:
-  port: 8081
+  port: ${SERVER_PORT}
+paladin:
+  security:
+    jwt-secret-key: ${JWT_SECRET_KEY}

@@ -6,21 +6,23 @@ import java.util.*
 
 @Entity
 @Table(
-    name = "user_profiles",
+    name = "user",
     schema = "public",
     indexes = [
-        Index(name = "idx_profiles_email", columnList = "email"),
-        Index(name = "idx_profiles_name", columnList = "display_name")
+        Index(name = "idx_profiles_email", columnList = "email")
     ]
 )
-data class UserProfileEntity(
+data class UserEntity(
     @Id
     @GeneratedValue
     @Column(name = "id", columnDefinition = "UUID DEFAULT uuid_generate_v4()", nullable = false)
     val id: UUID? = null,
-    
+
     @Column(name = "email", nullable = false)
     var email: String,
+
+    @Column(name = "phone")
+    var phone: String? = null,
 
     @Column(name = "display_name", nullable = false)
     var displayName: String,

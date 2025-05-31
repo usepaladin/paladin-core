@@ -1,10 +1,10 @@
 package paladin.core.repository.user
 
 import org.springframework.data.jpa.repository.JpaRepository
-import paladin.core.entities.user.UserProfileEntity
+import paladin.core.entities.user.UserEntity
 import java.util.*
 
-interface UserProfileRepository : JpaRepository<UserProfileEntity, UUID> {
-    fun findByEmail(email: String): Optional<UserProfileEntity>
-    fun findByDisplayName(name: String): Optional<UserProfileEntity>
+interface UserProfileRepository : JpaRepository<UserEntity, UUID> {
+    fun findByEmail(email: String): Optional<UserEntity>
+    fun findByDisplayName(name: String): Optional<UserEntity>
 }
