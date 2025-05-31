@@ -1,6 +1,7 @@
 package paladin.core.service.user
 
 import io.github.oshai.kotlinlogging.KLogger
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.stereotype.Service
 import paladin.core.entities.user.UserEntity
 import paladin.core.exceptions.NotFoundException
@@ -50,7 +51,15 @@ class UserProfileService(
         }
     }
 
+    @Throws(NotFoundException::class, IllegalArgumentException::class)
     fun updateUserDetails(user: User): User {
+        // Validate Session id matches target user
+        authTokenService.getUserId().run {
+            if (this != user.id) {
+                throw AccessDeniedException("Session user ID does not match provided user ID")
+            }
+        }
+
         findOrThrow(user.id, repository::findById).apply {
             displayName = user.name
             email = user.email

@@ -11,3 +11,4 @@ server:
 paladin:
   security:
     jwt-secret-key: ${JWT_SECRET_KEY}
+    jwt-issuer: ${JWT_ISSUER}

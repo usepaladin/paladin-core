@@ -1,6 +1,7 @@
 package paladin.core.service.auth
 
 import io.github.oshai.kotlinlogging.KLogger
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Service
@@ -17,7 +18,7 @@ class AuthTokenService(private val logger: KLogger) {
         authentication.let {
             if (it == null || it.principal !is Jwt) {
                 logger.warn { "No JWT found in the security context" }
-                throw IllegalStateException("No JWT found in the security context")
+                throw AccessDeniedException("No JWT found in the security context")
             }
 
             return it.principal as Jwt
@@ -27,27 +28,19 @@ class AuthTokenService(private val logger: KLogger) {
     /**
      * Retrieves the user ID from the JWT claims.
      */
-    @Throws(IllegalStateException::class, IllegalArgumentException::class)
+    @Throws(AccessDeniedException::class, IllegalArgumentException::class)
     fun getUserId(): UUID {
         return getJwt().claims["user_id"].let {
             if (it == null) {
                 logger.warn { "User ID not found in JWT claims" }
-                throw IllegalStateException("User ID not found in JWT claims")
+                throw AccessDeniedException("User ID not found in JWT claims")
             } else {
                 UUID.fromString(it.toString())
             }
         }
 
     }
-
-    /**
-     * Retrieves the email from the JWT claims.
-     */
-    fun getEmail(): String {
-        return getJwt().claims["email"]?.toString()
-            ?: throw IllegalStateException("Email not found in JWT claims")
-    }
-
+    
     /**
      * Retrieves all associated user metadata from the JWT Claim
      */
