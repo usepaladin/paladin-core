@@ -2,7 +2,6 @@ package util
 
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader
-import com.nimbusds.jose.JWSSigner
 import com.nimbusds.jose.crypto.MACSigner
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
@@ -10,75 +9,130 @@ import org.junit.jupiter.api.extension.AfterEachCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.ExtensionContext
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.oauth2.jwt.Jwt
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
+import java.time.Instant
 import java.util.*
 
+
 object JwtTestUtil {
+
+    /**
+     * Creates a JWT similar to Supabase's format for testing.
+     *
+     * @param id The user ID (sub claim).
+     * @param email The user's email.
+     * @param displayName Optional display name (stored in user_metadata).
+     * @param roles Optional list of roles (stored in app_metadata).
+     * @param customClaims Optional map of additional claims.
+     * @param expirationSeconds Duration until the JWT expires (default: 3600).
+     * @param issuer The issuer (default: Supabase auth URL).
+     * @return The encoded JWT as a String.
+     */
     fun createTestJwt(
-        secret: String,
         id: String,
         email: String,
+        displayName: String? = null,
+        roles: List<String>? = null,
         customClaims: Map<String, Any> = emptyMap(),
-        expirationSeconds: Long = 3600
+        expirationSeconds: Long = 3600,
+        issuer: String = "https://abc.supabase.co/auth/v1",
+        secret: String = "test-secret-1234567890abcdef1234567890abcdef"
+
     ): String {
-        val signer: JWSSigner = MACSigner(secret.toByteArray())
+        try {
+            val header = JWSHeader.Builder(JWSAlgorithm.HS256)
+                .type(com.nimbusds.jose.JOSEObjectType.JWT)
+                .build()
 
-        val now = Date()
-        val exp = Date(now.time + expirationSeconds * 1000)
+            val now = Instant.now()
+            val claimsBuilder = JWTClaimsSet.Builder()
+                .subject(id)
+                .issuer(issuer)
+                .audience("authenticated")
+                .issueTime(Date.from(now))
+                .expirationTime(Date.from(now.plusSeconds(expirationSeconds)))
+                .claim("email", email)
+                .claim("role", "authenticated")
 
-        val claimsBuilder = JWTClaimsSet.Builder()
-            .subject(id)
-            .issuer("test-issuer")
-            .issueTime(now)
-            .expirationTime(exp)
-            .claim("email", email)
+            if (displayName != null) {
+                claimsBuilder.claim("user_metadata", mapOf("displayName" to displayName))
+            }
 
-        customClaims.forEach { (k, v) -> claimsBuilder.claim(k, v) }
+            if (roles != null) {
+                claimsBuilder.claim("app_metadata", mapOf("roles" to roles))
+            }
 
-        val claims = claimsBuilder.build()
+            customClaims.forEach { (k, v) -> claimsBuilder.claim(k, v) }
 
-        val signedJWT = SignedJWT(
-            JWSHeader(JWSAlgorithm.HS256),
-            claims
-        )
+            val claims = claimsBuilder.build()
 
-        signedJWT.sign(signer)
-        return signedJWT.serialize()
+            val signedJWT = SignedJWT(header, claims)
+            val signer = MACSigner(secret.toByteArray(Charsets.UTF_8))
+            signedJWT.sign(signer)
+
+            val jwt = signedJWT.serialize()
+            return jwt
+        } catch (e: Exception) {
+            throw e
+        }
     }
 }
 
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
-@ExtendWith(WithMockJwtExtension::class)
-annotation class WithMockJwt(
+@ExtendWith(WithUserPersonaExtension::class)
+annotation class WithUserPersona(
     val userId: String,
     val email: String,
-    val secret: String = "default-test-secret", // default for convenience
+    val displayName: String = "",
+    val roles: Array<String> = [],
     val expirationSeconds: Long = 3600
 )
 
-class WithMockJwtExtension : BeforeEachCallback, AfterEachCallback {
+class WithUserPersonaExtension : BeforeEachCallback, AfterEachCallback {
 
     override fun beforeEach(context: ExtensionContext) {
         val annotation = findEffectiveAnnotation(context)
 
         if (annotation != null) {
-            val jwt = JwtTestUtil.createTestJwt(
-                secret = annotation.secret,
+            val jwtString = JwtTestUtil.createTestJwt(
                 id = annotation.userId,
                 email = annotation.email,
+                displayName = annotation.displayName.ifEmpty { null },
+                roles = if (annotation.roles.isEmpty()) null else annotation.roles.toList(),
                 expirationSeconds = annotation.expirationSeconds
             )
 
-            val auth = UsernamePasswordAuthenticationToken(
-                annotation.userId,
-                jwt,
-                listOf(SimpleGrantedAuthority("ROLE_USER")) // Can be made dynamic later
+            // Create a Spring Security Jwt object
+            val claims = mutableMapOf<String, Any>(
+                "user_id" to annotation.userId,
+                "email" to annotation.email,
+                "role" to "authenticated",
+                "iss" to "https://abc.supabase.co/auth/v1",
+                "aud" to "authenticated"
+            )
+            if (annotation.displayName.isNotEmpty()) {
+                claims["user_metadata"] = mapOf("displayName" to annotation.displayName)
+            }
+            if (annotation.roles.isNotEmpty()) {
+                claims["app_metadata"] = mapOf("roles" to annotation.roles.toList())
+            }
+
+            val jwt = Jwt(
+                jwtString,
+                Instant.now(),
+                Instant.now().plusSeconds(annotation.expirationSeconds),
+                mapOf("alg" to "HS256", "typ" to "JWT"),
+                claims
             )
 
+            // Set JwtAuthenticationToken in SecurityContext
+            val authorities = annotation.roles.map { SimpleGrantedAuthority("ROLE_$it") }
+            val auth = JwtAuthenticationToken(jwt, authorities)
             SecurityContextHolder.getContext().authentication = auth
         }
     }
@@ -87,17 +141,17 @@ class WithMockJwtExtension : BeforeEachCallback, AfterEachCallback {
         SecurityContextHolder.clearContext()
     }
 
-    private fun findEffectiveAnnotation(context: ExtensionContext): WithMockJwt? {
+    private fun findEffectiveAnnotation(context: ExtensionContext): WithUserPersona? {
         val methodAnnotation = context.testMethod
-            .flatMap { Optional.ofNullable(it.getAnnotation(WithMockJwt::class.java)) }
+            .map { it.getAnnotation(WithUserPersona::class.java) }
+            .orElse(null)
 
-        if (methodAnnotation.isPresent) {
-            return methodAnnotation.get()
+        if (methodAnnotation != null) {
+            return methodAnnotation
         }
 
-        val classAnnotation = context.testClass
-            .flatMap { Optional.ofNullable(it.getAnnotation(WithMockJwt::class.java)) }
-
-        return classAnnotation.orElse(null)
+        return context.testClass
+            .map { it.getAnnotation(WithUserPersona::class.java) }
+            .orElse(null)
     }
 }
