@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    url: jdbc:tc:postgresql:15://localhost/testdb
+    username: test
+    password: test
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  test:
+    database:
+      replace: none
+paladin:
+  security:
+    jwt-secret-key: test-secret-1234567890abcdef1234567890abcdef
+    jwt-issuer: https://mskkfvtffgkadegdabft.supabase.co/auth/v1
