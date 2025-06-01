@@ -8,6 +8,9 @@ import java.util.*
 @Table(
     name = "user",
     schema = "public",
+    uniqueConstraints = [
+        UniqueConstraint(name = "uc_profiles_email", columnNames = ["email"])
+    ],
     indexes = [
         Index(name = "idx_profiles_email", columnList = "email")
     ]

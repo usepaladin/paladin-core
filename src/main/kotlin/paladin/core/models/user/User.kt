@@ -15,7 +15,11 @@ data class User(
     companion object Factory {
 
         fun fromEntity(entity: UserEntity): User {
-            entity.id?.let {
+            entity.id.let {
+                if (it == null) {
+                    throw IllegalArgumentException("UserEntity ID cannot be null")
+                }
+
                 return User(
                     id = it,
                     name = entity.displayName,
@@ -24,7 +28,7 @@ data class User(
                     avatarUrl = entity.avatarUrl,
                     createdAt = entity.createdAt
                 )
-            } ?: throw IllegalArgumentException("UserEntity must have a non-null id")
+            }
         }
     }
 }

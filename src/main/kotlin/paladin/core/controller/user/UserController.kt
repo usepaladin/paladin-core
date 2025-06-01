@@ -39,13 +39,7 @@ class UserController(
         val userProfiles = profileService.getBatchUserProfilesByIds(userIds)
         return ResponseEntity.ok(userProfiles)
     }
-
-    @GetMapping("/email/{email}")
-    fun getUserProfileByEmail(@PathVariable email: String): ResponseEntity<UserProfile> {
-        val userProfile = profileService.getUserProfileByEmail(email)
-        return ResponseEntity.ok(userProfile)
-    }
-
+    
     @DeleteMapping("/id/{userId}")
     fun deleteUserProfileById(@PathVariable userId: UUID): ResponseEntity<Void> {
         profileService.deleteUserProfile(userId)

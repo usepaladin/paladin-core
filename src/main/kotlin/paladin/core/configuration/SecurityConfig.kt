@@ -18,7 +18,7 @@ import javax.crypto.spec.SecretKeySpec
 @EnableWebSecurity
 class SecurityConfig(private val securityConfig: SecurityConfigurationProperties) {
 
-    private val secretKey = SecretKeySpec(securityConfig.jwtSecretKey.toByteArray(), "HmacSHA256")
+    private val secretKey = SecretKeySpec(securityConfig.jwtSecretKey.toByteArray(Charsets.UTF_8), "HmacSHA256")
 
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {

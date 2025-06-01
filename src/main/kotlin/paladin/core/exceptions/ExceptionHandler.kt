@@ -1,21 +1,39 @@
 package paladin.core.exceptions
 
+import io.github.oshai.kotlinlogging.KLogger
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
+import paladin.core.configuration.properties.ApplicationConfigurationProperties
+import paladin.core.models.response.ErrorResponse
 
 @ControllerAdvice
-class ExceptionHandler {
+class ExceptionHandler(private val logger: KLogger, private val config: ApplicationConfigurationProperties) {
 
     @ExceptionHandler(AccessDeniedException::class)
     fun handleAccessDeniedException(ex: AccessDeniedException): ResponseEntity<String> {
-        return ResponseEntity("Access denied: ${ex.message}", HttpStatus.FORBIDDEN)
+        logger.warn { "Access denied: ${ex.message}" }
+        return ErrorResponse(
+            statusCode = HttpStatus.FORBIDDEN,
+            error = "ACCESS DENIED",
+            message = ex.message ?: "Access denied",
+            stackTrace = config.includeStackTrace.takeIf { it }?.let { ex.stackTraceToString() }
+        ).also { logger.error { it } }.let {
+            ResponseEntity(it.message, it.statusCode)
+        }
     }
 
     @ExceptionHandler(NotFoundException::class)
     fun handleNotFoundException(ex: NotFoundException): ResponseEntity<String> {
-        return ResponseEntity("Resource not found: ${ex.message}", HttpStatus.NOT_FOUND)
+        return ErrorResponse(
+            statusCode = HttpStatus.NOT_FOUND,
+            error = "RESOURCE NOT FOUND",
+            message = ex.message ?: "Resource not found",
+            stackTrace = config.includeStackTrace.takeIf { it }?.let { ex.stackTraceToString() }
+        ).also { logger.error { it } }.let {
+            ResponseEntity(it.message, it.statusCode)
+        }
     }
 }
