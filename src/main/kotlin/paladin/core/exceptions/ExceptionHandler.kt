@@ -13,7 +13,7 @@ import paladin.core.models.response.ErrorResponse
 class ExceptionHandler(private val logger: KLogger, private val config: ApplicationConfigurationProperties) {
 
     @ExceptionHandler(AccessDeniedException::class)
-    fun handleAccessDeniedException(ex: AccessDeniedException): ResponseEntity<String> {
+    fun handleAccessDeniedException(ex: AccessDeniedException): ResponseEntity<ErrorResponse> {
         logger.warn { "Access denied: ${ex.message}" }
         return ErrorResponse(
             statusCode = HttpStatus.FORBIDDEN,
@@ -21,19 +21,19 @@ class ExceptionHandler(private val logger: KLogger, private val config: Applicat
             message = ex.message ?: "Access denied",
             stackTrace = config.includeStackTrace.takeIf { it }?.let { ex.stackTraceToString() }
         ).also { logger.error { it } }.let {
-            ResponseEntity(it.message, it.statusCode)
+            ResponseEntity(it, it.statusCode)
         }
     }
 
     @ExceptionHandler(NotFoundException::class)
-    fun handleNotFoundException(ex: NotFoundException): ResponseEntity<String> {
+    fun handleNotFoundException(ex: NotFoundException): ResponseEntity<ErrorResponse> {
         return ErrorResponse(
             statusCode = HttpStatus.NOT_FOUND,
             error = "RESOURCE NOT FOUND",
             message = ex.message ?: "Resource not found",
             stackTrace = config.includeStackTrace.takeIf { it }?.let { ex.stackTraceToString() }
         ).also { logger.error { it } }.let {
-            ResponseEntity(it.message, it.statusCode)
+            ResponseEntity(it, it.statusCode)
         }
     }
 }
