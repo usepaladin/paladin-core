@@ -27,7 +27,6 @@ class SecurityConfig(private val securityConfig: SecurityConfigurationProperties
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) } // Stateless session
             .authorizeHttpRequests { auth ->
                 auth
-                    .requestMatchers("/auth/**").permitAll() // Allow public endpoints (e.g., login)
                     .anyRequest().authenticated() // Require authentication for all other endpoints
             }
             .oauth2ResourceServer { oauth2 ->
