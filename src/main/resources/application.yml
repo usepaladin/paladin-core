@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: core
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_AUTH_URL}
+server:
+  port: ${SERVER_PORT}
+paladin:
+  security:
+    jwt-secret-key: ${JWT_SECRET_KEY}
+    jwt-issuer: ${JWT_ISSUER}
+  include-stack-trace: true
