@@ -45,4 +45,10 @@ class UserController(
         val userProfile = profileService.getUserProfileByEmail(email)
         return ResponseEntity.ok(userProfile)
     }
+
+    @DeleteMapping("/id/{userId}")
+    fun deleteUserProfileById(@PathVariable userId: UUID): ResponseEntity<Void> {
+        profileService.deleteUserProfile(userId)
+        return ResponseEntity.noContent().build()
+    }
 }
