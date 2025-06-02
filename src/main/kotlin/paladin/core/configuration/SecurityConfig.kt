@@ -11,6 +11,7 @@ import org.springframework.security.oauth2.jose.jws.MacAlgorithm
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.web.SecurityFilterChain
+import paladin.core.configuration.auth.CustomMethodSecurityExpressionHandler
 import paladin.core.configuration.properties.SecurityConfigurationProperties
 import javax.crypto.spec.SecretKeySpec
 
@@ -42,5 +43,10 @@ class SecurityConfig(private val securityConfig: SecurityConfigurationProperties
         return NimbusJwtDecoder.withSecretKey(secret.secretKey)
             .macAlgorithm(MacAlgorithm.HS256)
             .build()
+    }
+
+    @Bean
+    fun expressionHandler(): CustomMethodSecurityExpressionHandler {
+        return CustomMethodSecurityExpressionHandler()
     }
 }
