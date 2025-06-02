@@ -18,6 +18,9 @@ data class OrganisationEntity(
     @Column(name = "name", nullable = false, unique = true)
     var name: String,
 
+    @Column(name = "member_count", nullable = false, updatable = false)
+    val memberCount: Int = 0,
+
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: ZonedDateTime = ZonedDateTime.now(),
 

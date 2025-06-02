@@ -6,10 +6,11 @@ import java.util.*
 
 @Entity
 @Table(
-    name = "user",
+    name = "user_profiles",
     schema = "public",
     uniqueConstraints = [
-        UniqueConstraint(name = "uc_profiles_email", columnNames = ["email"])
+        UniqueConstraint(name = "uc_profiles_email", columnNames = ["email"]),
+        UniqueConstraint(name = "uc_profiles_phone", columnNames = ["phone"])
     ],
     indexes = [
         Index(name = "idx_profiles_email", columnList = "email")
@@ -18,7 +19,7 @@ import java.util.*
 data class UserEntity(
     @Id
     @GeneratedValue
-    @Column(name = "id", columnDefinition = "UUID DEFAULT uuid_generate_v4()", nullable = false)
+    @Column(name = "id")
     val id: UUID? = null,
 
     @Column(name = "email", nullable = false)
