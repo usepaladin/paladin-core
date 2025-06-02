@@ -96,19 +96,20 @@ CREATE INDEX idx_invite_email ON public.organisation_invites (email);
 
 -- Function to update member count
 CREATE OR REPLACE FUNCTION public.update_org_member_count()
-    RETURNS TRIGGER AS $$
+    RETURNS TRIGGER AS
+$$
 BEGIN
     IF (TG_OP = 'INSERT') THEN
         -- Increment member count on INSERT
         UPDATE public.organisations
         SET member_count = member_count + 1,
-            updated_at = now()
+            updated_at   = now()
         WHERE id = NEW.organisation_id;
     ELSIF (TG_OP = 'DELETE') THEN
         -- Decrement member count on DELETE
-        UPDATE organisation.organisation
-        SET org_member_count = org_member_count - 1,
-            updated_at = now()
+        UPDATE public.organisations
+        SET member_count = member_count - 1,
+            updated_at   = now()
         WHERE id = OLD.organisation_id;
     END IF;
 
@@ -118,17 +119,49 @@ $$ LANGUAGE plpgsql;
 
 -- Trigger for INSERT and DELETE on org_member
 CREATE or replace TRIGGER trg_update_org_member_count
-    AFTER INSERT OR DELETE ON organisation.org_member
+    AFTER INSERT OR DELETE
+    ON public.organisation_members
     FOR EACH ROW
-EXECUTE FUNCTION organisation.update_org_member_count();
+EXECUTE FUNCTION public.update_org_member_count();
 
-create table organisation.user_default_organisation(
-                                                       user_id UUID NOT NULL,
-                                                       organisation_id UUID NOT null,
-                                                       primary key(user_id, organisation_id)
-)
+create table public.user_default_organisation
+(
+    user_id         UUID NOT NULL,
+    organisation_id UUID NOT null,
+    primary key (user_id, organisation_id)
+);
 
-create index idx_user_default_org on organisation.user_default_organisation(user_id);
+create index idx_user_default_org on public.user_default_organisation (user_id);
 
+ALTER TABLE ORGANISATIONS
+    ENABLE ROW LEVEL SECURITY;
 
+/* Add restrictions to ensure that only organisation members can view their organisation*/
+CREATE POLICY "Users can view their own organisations" on organisations
+    FOR SELECT
+    TO authenticated
+    USING (
+    id IN (SELECT organisation_id
+           FROM organisation_members
+           WHERE user_id = auth.uid())
+    );
+
+/* Add Organisation Roles to Supabase JWT */
+CREATE FUNCTION public.custom_access_token_hook()
+    RETURNS jsonb
+    LANGUAGE plpgsql
+AS
+$$
+DECLARE
+    _roles jsonb;
+BEGIN
+    SELECT jsonb_agg(jsonb_build_object('organisation_id', organisation_id, 'role', role))
+    INTO _roles
+    FROM organisation_members
+    WHERE user_id = (auth.uid());
+    RETURN jsonb_build_object('roles', _roles);
+END;
+$$;
+
+GRANT ALL ON FUNCTION public.custom_access_token_hook TO supabase_auth_admin;
 
