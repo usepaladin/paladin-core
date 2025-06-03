@@ -1,6 +1,5 @@
 package paladin.core.configuration.auth
 
-import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.access.expression.SecurityExpressionRoot
 import org.springframework.security.access.expression.method.MethodSecurityExpressionOperations
 import org.springframework.security.core.Authentication
@@ -15,10 +14,26 @@ data class SecurityExpressionRootConfiguration(
     private var returnObject: Any? = null
     private var target: Any? = null
 
-    fun hasOrgRole(organisationId: UUID, role: OrganisationRoles) {
+
+    fun hasOrgRole(organisationId: UUID, role: OrganisationRoles): Boolean {
         val authority: String = "ROLE_${organisationId}_$role"
-        if (!authentication.authorities.any { it.authority == authority }) {
-            throw AccessDeniedException("User does not have the required role: $role for organisation: $organisationId")
+        return authentication.authorities.any { it.authority == authority }
+    }
+
+    fun hasOrg(organisationId: UUID): Boolean {
+        return authentication.authorities.any { it.authority.startsWith("ROLE_$organisationId") }
+    }
+
+    fun hasOrgRoleOrHigher(
+        organisationId: UUID,
+        targetRole: OrganisationRoles
+    ): Boolean {
+        val roleClaim: String = authentication.authorities
+            .firstOrNull { it.authority.startsWith("ROLE_$organisationId") }
+            ?.authority ?: return false
+
+        return OrganisationRoles.fromString(roleClaim.removePrefix("ROLE_${organisationId}_")).let { role ->
+            role != null && role.authority >= targetRole.authority
         }
     }
 

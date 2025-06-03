@@ -1,9 +1,11 @@
-package paladin.core.configuration
+package paladin.core.configuration.auth
 
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
@@ -11,13 +13,15 @@ import org.springframework.security.oauth2.jose.jws.MacAlgorithm
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.web.SecurityFilterChain
-import paladin.core.configuration.auth.CustomMethodSecurityExpressionHandler
 import paladin.core.configuration.properties.SecurityConfigurationProperties
 import javax.crypto.spec.SecretKeySpec
 
 @Configuration
 @EnableWebSecurity
-class SecurityConfig(private val securityConfig: SecurityConfigurationProperties) {
+@EnableMethodSecurity(prePostEnabled = true)
+class SecurityConfig(
+    private val securityConfig: SecurityConfigurationProperties
+) {
 
     private val secretKey = SecretKeySpec(securityConfig.jwtSecretKey.toByteArray(Charsets.UTF_8), "HmacSHA256")
 
@@ -46,7 +50,7 @@ class SecurityConfig(private val securityConfig: SecurityConfigurationProperties
     }
 
     @Bean
-    fun expressionHandler(): CustomMethodSecurityExpressionHandler {
+    fun methodSecurityExpressionHandler(): MethodSecurityExpressionHandler {
         return CustomMethodSecurityExpressionHandler()
     }
 }

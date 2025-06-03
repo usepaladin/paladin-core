@@ -1,15 +1,25 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 DROP TABLE IF EXISTS "user_profiles";
 
+CREATE TABLE IF NOT EXISTS "organisations"
+(
+    "id"           UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+    "name"         VARCHAR(100)     NOT NULL UNIQUE,
+    "member_count" INTEGER          NOT NULL DEFAULT 0,
+    "created_at"   TIMESTAMP WITH TIME ZONE  DEFAULT CURRENT_TIMESTAMP,
+    "updated_at"   TIMESTAMP WITH TIME ZONE  DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS "user_profiles"
 (
-    "id"           UUID PRIMARY KEY NOT NULL REFERENCES auth.users (id) ON DELETE CASCADE,
-    "email"        VARCHAR(100)     NOT NULL UNIQUE,
-    "phone"        VARCHAR(15) UNIQUE,
-    "display_name" VARCHAR(50)      NOT NULL,
-    "avatar_url"   TEXT,
-    "created_at"   TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    "updated_at"   TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    "id"                      UUID PRIMARY KEY NOT NULL REFERENCES auth.users (id) ON DELETE CASCADE,
+    "email"                   VARCHAR(100)     NOT NULL UNIQUE,
+    "phone"                   VARCHAR(15) UNIQUE,
+    "display_name"            VARCHAR(50)      NOT NULL,
+    "avatar_url"              TEXT,
+    "default_organisation_id" UUID             references public.organisations (id) ON DELETE SET NULL,
+    "created_at"              TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    "updated_at"              TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 alter table public.user_profiles
@@ -57,14 +67,6 @@ begin
 end;
 $$;
 
-CREATE TABLE IF NOT EXISTS "organisations"
-(
-    "id"           UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
-    "name"         VARCHAR(100)     NOT NULL UNIQUE,
-    "member_count" INTEGER          NOT NULL DEFAULT 0,
-    "created_at"   TIMESTAMP WITH TIME ZONE  DEFAULT CURRENT_TIMESTAMP,
-    "updated_at"   TIMESTAMP WITH TIME ZONE  DEFAULT CURRENT_TIMESTAMP
-);
 
 CREATE TYPE ORGANISATION_ROLE AS ENUM ('owner', 'admin', 'developer', 'readonly');
 
@@ -123,15 +125,6 @@ CREATE or replace TRIGGER trg_update_org_member_count
     ON public.organisation_members
     FOR EACH ROW
 EXECUTE FUNCTION public.update_org_member_count();
-
-create table public.user_default_organisation
-(
-    user_id         UUID NOT NULL,
-    organisation_id UUID NOT null,
-    primary key (user_id, organisation_id)
-);
-
-create index idx_user_default_org on public.user_default_organisation (user_id);
 
 ALTER TABLE ORGANISATIONS
     ENABLE ROW LEVEL SECURITY;

@@ -20,7 +20,7 @@ class UserController(
     }
 
     @GetMapping("/")
-    fun getUserProfileBySession(): ResponseEntity<User> {
+    fun getCurrentUser(): ResponseEntity<User> {
         val user: User = profileService.getUserFromSession()
         return ResponseEntity.ok(user)
     }
@@ -39,7 +39,7 @@ class UserController(
         val userProfiles = profileService.getBatchUserProfilesByIds(userIds)
         return ResponseEntity.ok(userProfiles)
     }
-    
+
     @DeleteMapping("/id/{userId}")
     fun deleteUserProfileById(@PathVariable userId: UUID): ResponseEntity<Void> {
         profileService.deleteUserProfile(userId)

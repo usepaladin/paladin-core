@@ -1,6 +1,7 @@
 package paladin.core.entities.organisation
 
 import jakarta.persistence.*
+import paladin.core.enums.organisation.OrganisationPlan
 import java.time.ZonedDateTime
 import java.util.*
 
@@ -15,8 +16,12 @@ data class OrganisationEntity(
     @Column(name = "id", columnDefinition = "UUID DEFAULT uuid_generate_v4()", nullable = false)
     val id: UUID? = null,
 
-    @Column(name = "name", nullable = false, unique = true)
+    @Column(name = "name", nullable = false, updatable = true)
     var name: String,
+
+    @Column(name = "plan", nullable = false, updatable = true)
+    @Enumerated(EnumType.STRING)
+    var plan: OrganisationPlan,
 
     @Column(name = "member_count", nullable = false, updatable = false)
     val memberCount: Int = 0,
@@ -26,4 +31,13 @@ data class OrganisationEntity(
 
     @Column(name = "updated_at", nullable = false, updatable = false)
     val updatedAt: ZonedDateTime = ZonedDateTime.now(),
-)
+) {
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "organisation_members",
+        schema = "public",
+        joinColumns = [JoinColumn(name = "organisation_id", referencedColumnName = "id")],
+        inverseJoinColumns = [JoinColumn(name = "user_id", referencedColumnName = "id")]
+    )
+    var members: MutableSet<OrganisationMemberEntity> = mutableSetOf()
+}

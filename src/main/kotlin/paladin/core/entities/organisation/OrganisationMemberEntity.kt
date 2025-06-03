@@ -1,6 +1,7 @@
 package paladin.core.entities.organisation
 
 import jakarta.persistence.*
+import paladin.core.entities.user.UserEntity
 import paladin.core.enums.organisation.OrganisationRoles
 import java.time.ZonedDateTime
 import java.util.*
@@ -21,6 +22,14 @@ data class OrganisationMemberEntity(
     @Column(name = "member_since", nullable = false, updatable = false)
     val memberSince: ZonedDateTime = ZonedDateTime.now(),
 ) {
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", referencedColumnName = "id", insertable = false, updatable = false)
+    val user: UserEntity? = null
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organisation_id", referencedColumnName = "id", insertable = false, updatable = false)
+    var organisation: OrganisationEntity? = null
+
     @Embeddable
     data class OrganisationMemberKey(
         @Column(name = "organisation_id", nullable = false)

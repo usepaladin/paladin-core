@@ -1,6 +1,7 @@
 package paladin.core.entities.organisation
 
 import jakarta.persistence.*
+import paladin.core.entities.user.UserEntity
 import paladin.core.enums.organisation.OrganisationInviteStatus
 import paladin.core.enums.organisation.OrganisationRoles
 import java.time.ZonedDateTime
@@ -54,4 +55,13 @@ data class OrganisationInviteEntity(
 
     @Column(name = "created_at", updatable = false)
     val createdAt: ZonedDateTime = ZonedDateTime.now()
-)
+) {
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organisation_id", referencedColumnName = "id", insertable = false, updatable = false)
+    var organisation: OrganisationEntity? = null
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "invited_by", referencedColumnName = "id", insertable = false, updatable = false)
+    var invitedByUser: UserEntity? = null
+}

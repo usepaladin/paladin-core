@@ -5,6 +5,7 @@ import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Service
+import paladin.core.enums.organisation.OrganisationRoles
 import java.util.*
 
 @Service
@@ -40,12 +41,29 @@ class AuthTokenService(private val logger: KLogger) {
         }
 
     }
-    
+
     /**
      * Retrieves all associated user metadata from the JWT Claim
      */
     fun getAllClaims(): Map<String, Any> {
         return getJwt().claims
             .also { logger.info { "Retrieved claims: $it" } }
+    }
+
+    /**
+     * Retrieve the organisation roles
+     */
+    fun getUserOrganisationRoles(organisationId: UUID): Map<UUID, OrganisationRoles> {
+        return getJwt().claims["org_roles"]?.let {
+            if (it is List<*>) {
+                it.filterIsInstance<String>()
+            } else {
+                logger.warn { "Organisation roles claim is not a list" }
+                emptyList()
+            }
+        } ?: run {
+            logger.warn { "No organisation roles found in JWT claims" }
+            emptyList()
+        }
     }
 }

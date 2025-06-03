@@ -8,7 +8,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.core.Authentication
 
 @Configuration
-@EnableMethodSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 class CustomMethodSecurityExpressionHandler : DefaultMethodSecurityExpressionHandler() {
     override fun createSecurityExpressionRoot(
         authentication: Authentication,
