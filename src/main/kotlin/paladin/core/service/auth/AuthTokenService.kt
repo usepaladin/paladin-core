@@ -1,11 +1,12 @@
 package paladin.core.service.auth
 
+import OrganisationRole
 import io.github.oshai.kotlinlogging.KLogger
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.jwt.Jwt
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.stereotype.Service
-import paladin.core.enums.organisation.OrganisationRoles
 import java.util.*
 
 @Service
@@ -50,19 +51,33 @@ class AuthTokenService(private val logger: KLogger) {
             .also { logger.info { "Retrieved claims: $it" } }
     }
 
-    /**
-     * Retrieve the organisation roles
-     */
-    fun getUserOrganisationRoles(organisationId: UUID): Map<UUID, OrganisationRoles> {
-        return getJwt().claims["org_roles"]?.let {
-            if (it is List<*>) {
-                it.filterIsInstance<String>()
-            } else {
-                logger.warn { "Organisation roles claim is not a list" }
-                emptyList()
-            }
-        } ?: run {
-            logger.warn { "No organisation roles found in JWT claims" }
+    fun getCurrentUserAuthorities(): Collection<String> {
+        return SecurityContextHolder.getContext().authentication?.authorities
+            ?.map { it.authority } ?: emptyList()
+    }
+
+    fun getUserOrganisationRoles(): List<OrganisationRole> {
+        val authentication = SecurityContextHolder.getContext().authentication
+        return if (authentication is JwtAuthenticationToken) {
+            extractOrganisationRoles(authentication.token)
+        } else emptyList()
+    }
+
+    private fun extractOrganisationRoles(jwt: Jwt): List<OrganisationRole> {
+        return try {
+            val rolesRaw = jwt.getClaim<List<Map<String, Any>>>("roles")
+            rolesRaw?.mapNotNull { role ->
+                val orgIdStr = role["organisation_id"]?.toString()
+                val roleStr = role["role"]?.toString()
+                if (orgIdStr != null && roleStr != null) {
+                    try {
+                        OrganisationRole(UUID.fromString(orgIdStr), roleStr)
+                    } catch (e: Exception) {
+                        null
+                    }
+                } else null
+            } ?: emptyList()
+        } catch (e: Exception) {
             emptyList()
         }
     }

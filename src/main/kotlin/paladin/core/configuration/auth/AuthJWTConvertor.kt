@@ -1,5 +1,4 @@
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.core.convert.converter.Converter
 import org.springframework.security.authentication.AbstractAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -9,7 +8,7 @@ import org.springframework.stereotype.Component
 import java.util.*
 
 @Component
-class CustomJwtAuthenticationConverter(private val objectMapper: ObjectMapper) :
+class CustomJwtAuthenticationConverter :
     Converter<Jwt, AbstractAuthenticationToken> {
 
     override fun convert(jwt: Jwt): AbstractAuthenticationToken {
@@ -17,10 +16,8 @@ class CustomJwtAuthenticationConverter(private val objectMapper: ObjectMapper) :
 
         // Extract standard authorities if they exist
         val scope = jwt.getClaimAsString("scope")
-        if (scope != null) {
-            scope.split(" ").forEach { s ->
-                authorities.add(SimpleGrantedAuthority("SCOPE_$s"))
-            }
+        scope?.split(" ")?.forEach { s ->
+            authorities.add(SimpleGrantedAuthority("SCOPE_$s"))
         }
 
         // Extract custom organization roles

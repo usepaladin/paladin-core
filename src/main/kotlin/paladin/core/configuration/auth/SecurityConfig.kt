@@ -1,6 +1,7 @@
 package paladin.core.configuration.auth
 
 
+import CustomJwtAuthenticationConverter
 import com.nimbusds.jose.jwk.source.ImmutableSecret
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -20,7 +21,8 @@ import javax.crypto.spec.SecretKeySpec
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 class SecurityConfig(
-    private val securityConfig: SecurityConfigurationProperties
+    private val securityConfig: SecurityConfigurationProperties,
+    private val jwtConvertor: CustomJwtAuthenticationConverter
 ) {
 
     private val secretKey = SecretKeySpec(securityConfig.jwtSecretKey.toByteArray(Charsets.UTF_8), "HmacSHA256")
@@ -35,7 +37,7 @@ class SecurityConfig(
                     .anyRequest().authenticated() // Require authentication for all other endpoints
             }
             .oauth2ResourceServer { oauth2 ->
-                oauth2.jwt { } // Enable JWT validation
+                oauth2.jwt { jwt -> jwt.jwtAuthenticationConverter(jwtConvertor) } // Enable JWT validation
             }
         return http.build()
     }
