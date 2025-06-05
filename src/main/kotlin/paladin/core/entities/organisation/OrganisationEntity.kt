@@ -32,12 +32,6 @@ data class OrganisationEntity(
     @Column(name = "updated_at", nullable = false, updatable = false)
     val updatedAt: ZonedDateTime = ZonedDateTime.now(),
 ) {
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "organisation_members",
-        schema = "public",
-        joinColumns = [JoinColumn(name = "organisation_id", referencedColumnName = "id")],
-        inverseJoinColumns = [JoinColumn(name = "user_id", referencedColumnName = "id")]
-    )
+    @OneToMany(mappedBy = "organisation", cascade = [CascadeType.ALL], fetch = FetchType.LAZY, orphanRemoval = true)
     var members: MutableSet<OrganisationMemberEntity> = mutableSetOf()
 }

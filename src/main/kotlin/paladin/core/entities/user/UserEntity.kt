@@ -36,9 +36,6 @@ data class UserEntity(
     @Column(name = "avatar_url")
     var avatarUrl: String? = null,
 
-    @Column(name = "default_organisation_id", nullable = true, columnDefinition = "UUID")
-    var defaultOrganisationId: UUID? = null,
-
     @Column(
         name = "created_at",
         nullable = false,

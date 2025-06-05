@@ -1,12 +1,12 @@
 package paladin.core.service.auth
 
-import OrganisationRole
 import io.github.oshai.kotlinlogging.KLogger
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.stereotype.Service
+import paladin.core.configuration.auth.OrganisationRole
 import java.util.*
 
 @Service

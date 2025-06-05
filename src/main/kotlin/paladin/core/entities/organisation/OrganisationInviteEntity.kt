@@ -27,9 +27,7 @@ data class OrganisationInviteEntity(
     @GeneratedValue
     @Column(columnDefinition = "UUID DEFAULT uuid_generate_v4()", updatable = false, nullable = false)
     val id: UUID? = null,
-
-    @Id
-    @GeneratedValue
+    
     @Column(name = "organisation_id", columnDefinition = "UUID", nullable = false)
     val organisationId: UUID,
 

@@ -1,19 +1,19 @@
-package paladin.core.configuration.auth
+package paladin.core.configuration
 
-
-import CustomJwtAuthenticationConverter
-import com.nimbusds.jose.jwk.source.ImmutableSecret
+import jakarta.servlet.http.HttpServletResponse
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.web.SecurityFilterChain
+import paladin.core.configuration.auth.CustomJwtAuthenticationConverter
+import paladin.core.configuration.auth.CustomMethodSecurityExpressionHandler
 import paladin.core.configuration.properties.SecurityConfigurationProperties
 import javax.crypto.spec.SecretKeySpec
 
@@ -22,7 +22,7 @@ import javax.crypto.spec.SecretKeySpec
 @EnableMethodSecurity(prePostEnabled = true)
 class SecurityConfig(
     private val securityConfig: SecurityConfigurationProperties,
-    private val jwtConvertor: CustomJwtAuthenticationConverter
+    private val jwtConverter: CustomJwtAuthenticationConverter
 ) {
 
     private val secretKey = SecretKeySpec(securityConfig.jwtSecretKey.toByteArray(Charsets.UTF_8), "HmacSHA256")
@@ -34,24 +34,30 @@ class SecurityConfig(
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) } // Stateless session
             .authorizeHttpRequests { auth ->
                 auth
+                    .requestMatchers("/public/**").permitAll() // Allow public endpoints
                     .anyRequest().authenticated() // Require authentication for all other endpoints
             }
             .oauth2ResourceServer { oauth2 ->
-                oauth2.jwt { jwt -> jwt.jwtAuthenticationConverter(jwtConvertor) } // Enable JWT validation
+                oauth2.jwt { jwt ->
+                    jwt.jwtAuthenticationConverter(jwtConverter)
+                }
             }
+            .exceptionHandling { exceptions ->
+                exceptions.authenticationEntryPoint { _, response, authException ->
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.message)
+                }
+            }
+
         return http.build()
     }
 
     @Bean
     fun jwtDecoder(): JwtDecoder {
-        // Use HS256 with the SUPABASE_JWT_SECRET
-        val secret = ImmutableSecret<Nothing>(secretKey)
-        return NimbusJwtDecoder.withSecretKey(secret.secretKey)
-            .macAlgorithm(MacAlgorithm.HS256)
-            .build()
+        return NimbusJwtDecoder.withSecretKey(secretKey).build()
     }
 
     @Bean
+    @Primary
     fun methodSecurityExpressionHandler(): MethodSecurityExpressionHandler {
         return CustomMethodSecurityExpressionHandler()
     }

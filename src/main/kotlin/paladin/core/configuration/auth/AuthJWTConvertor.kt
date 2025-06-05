@@ -1,3 +1,5 @@
+package paladin.core.configuration.auth
+
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.springframework.core.convert.converter.Converter
 import org.springframework.security.authentication.AbstractAuthenticationToken
