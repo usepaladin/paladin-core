@@ -1,6 +1,8 @@
 package paladin.core.service.organisation
 
+import io.github.oshai.kotlinlogging.KLogger
 import org.springframework.security.access.AccessDeniedException
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
 import paladin.core.entities.organisation.OrganisationEntity
 import paladin.core.entities.organisation.OrganisationMemberEntity
@@ -19,9 +21,11 @@ import java.util.*
 class OrganisationService(
     private val organisationRepository: OrganisationRepository,
     private val organisationMemberRepository: OrganisationMemberRepository,
+    private val logger: KLogger,
     private val authTokenService: AuthTokenService
 ) {
 
+    @PreAuthorize("hasOrg(#organisationId)")
     @Throws(NotFoundException::class)
     fun getOrganisation(organisationId: UUID, includeMembers: Boolean = false): Organisation {
         return findOrThrow(organisationId, organisationRepository::findById).let {
@@ -64,5 +68,24 @@ class OrganisationService(
             members = listOf(member),
             memberCount = 1
         )
+    }
+
+    @PreAuthorize("hasOrgRoleOrHigher(#organisation.id, 'ADMIN')")
+    fun updateOrganisation(organisation: Organisation) {
+
+    }
+
+    @PreAuthorize("hasOrgRoleOrHigher(#organisationId, 'OWNER')")
+    fun deleteOrganisation(organisationId: UUID) {
+        // Check if the organisation exists
+        val organisation: OrganisationEntity = findOrThrow(organisationId, organisationRepository::findById)
+
+        // Delete all members associated with the organisation
+        organisationMemberRepository.deleteAllByOrganisationId(organisationId)
+
+        // Delete the organisation itself
+        organisationRepository.delete(organisation)
+
+        logger.info { "Organisation with ID $organisationId deleted successfully." }
     }
 }

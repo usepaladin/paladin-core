@@ -5,4 +5,8 @@ import paladin.core.entities.organisation.OrganisationMemberEntity
 import java.util.*
 
 
-interface OrganisationMemberRepository : JpaRepository<OrganisationMemberEntity, UUID>
+interface OrganisationMemberRepository : JpaRepository<OrganisationMemberEntity, UUID> {
+    fun deleteByIdOrganisationId(organisationId: UUID)
+    fun findByIdUserId(userId: UUID): List<OrganisationMemberEntity>
+    fun findByIdOrganisationId(organisationId: UUID): List<OrganisationMemberEntity>
+}
