@@ -20,7 +20,7 @@ import paladin.core.repository.user.UserProfileRepository
 import paladin.core.service.auth.AuthTokenService
 import util.TestLogAppender
 import util.WithUserPersona
-import util.user.MockUserEntityFactory
+import util.factory.MockUserEntityFactory
 import java.util.*
 
 @SpringBootTest

@@ -13,9 +13,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
+import paladin.core.enums.organisation.OrganisationRoles
 import java.time.Instant
 import java.util.*
-
 
 object JwtTestUtil {
 
@@ -35,7 +35,7 @@ object JwtTestUtil {
         id: String,
         email: String,
         displayName: String? = null,
-        roles: List<String>? = null,
+        roles: List<OrganisationRole> = emptyList(),
         customClaims: Map<String, Any> = emptyMap(),
         expirationSeconds: Long = 3600,
         issuer: String = "https://abc.supabase.co/auth/v1",
@@ -61,8 +61,13 @@ object JwtTestUtil {
                 claimsBuilder.claim("user_metadata", mapOf("displayName" to displayName))
             }
 
-            if (roles != null) {
-                claimsBuilder.claim("app_metadata", mapOf("roles" to roles))
+            if (roles.isNotEmpty()) {
+                claimsBuilder.claim("app_metadata", mapOf("roles" to roles.map {
+                    mapOf(
+                        "organisation_id" to it.organisationId,
+                        "role" to it.role
+                    )
+                }))
             }
 
             customClaims.forEach { (k, v) -> claimsBuilder.claim(k, v) }
@@ -81,6 +86,10 @@ object JwtTestUtil {
     }
 }
 
+@Target
+@Retention(AnnotationRetention.RUNTIME)
+annotation class OrganisationRole(val organisationId: String, val role: OrganisationRoles)
+
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
@@ -89,7 +98,7 @@ annotation class WithUserPersona(
     val userId: String,
     val email: String,
     val displayName: String = "",
-    val roles: Array<String> = [],
+    val roles: Array<OrganisationRole> = [],
     val expirationSeconds: Long = 3600
 )
 
@@ -103,7 +112,7 @@ class WithUserPersonaExtension : BeforeEachCallback, AfterEachCallback {
                 id = annotation.userId,
                 email = annotation.email,
                 displayName = annotation.displayName.ifEmpty { null },
-                roles = if (annotation.roles.isEmpty()) null else annotation.roles.toList(),
+                roles = annotation.roles.toList(),
                 expirationSeconds = annotation.expirationSeconds
             )
 
