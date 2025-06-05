@@ -4,6 +4,7 @@ import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import org.junit.jupiter.api.AfterEach
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
+import paladin.core.entities.organisation.OrganisationEntity
 import paladin.core.enums.organisation.OrganisationRoles
 import paladin.core.repository.organisation.OrganisationMemberRepository
 import paladin.core.repository.organisation.OrganisationRepository
@@ -21,6 +23,7 @@ import paladin.core.service.auth.AuthTokenService
 import util.OrganisationRole
 import util.TestLogAppender
 import util.WithUserPersona
+import util.factory.MockOrganisationEntityFactory
 import java.util.*
 
 @SpringBootTest
@@ -87,6 +90,15 @@ class OrganisationServiceTest {
 
     @Test
     fun `handle organisation fetch with appropriate permissions`() {
+        val entity: OrganisationEntity = MockOrganisationEntityFactory.createOrganisation(
+            id = organisationId1,
+            name = "Test Organisation",
+        )
+
+        every { organisationRepository.findById(organisationId1) } returns Optional.of(entity)
+        val organisation = organisationService.getOrganisation(organisationId1)
+        assert(organisation.id == organisationId1)
+
     }
 
     @Test

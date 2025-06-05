@@ -7,8 +7,8 @@ import org.springframework.security.core.context.SecurityContextHolder
 import paladin.core.enums.organisation.OrganisationRoles
 import java.util.*
 
-data class SecurityExpressionRootConfiguration(
-    val authentication: Authentication
+class SecurityExpressionRootConfiguration(
+    authentication: Authentication
 ) : SecurityExpressionRoot(authentication), MethodSecurityExpressionOperations {
 
     private var filterObject: Any? = null

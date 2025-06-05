@@ -81,7 +81,7 @@ class OrganisationService(
         val organisation: OrganisationEntity = findOrThrow(organisationId, organisationRepository::findById)
 
         // Delete all members associated with the organisation
-        organisationMemberRepository.deleteAllByOrganisationId(organisationId)
+        organisationMemberRepository.deleteByIdOrganisationId(organisationId)
 
         // Delete the organisation itself
         organisationRepository.delete(organisation)

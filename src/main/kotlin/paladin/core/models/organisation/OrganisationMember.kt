@@ -17,13 +17,20 @@ data class OrganisationMember(
     companion object Factory {
         fun fromEntity(entity: OrganisationMemberEntity, organisation: OrganisationEntity? = null): OrganisationMember {
             entity.id.let {
-                return OrganisationMember(
-                    user = UserProfile.fromEntity(entity.user),
-                    organisationId = it.organisationId,
-                    role = entity.role,
-                    memberSince = entity.memberSince,
-                    organisation = organisation?.let { entity -> Organisation.fromEntity(entity) }
-                )
+                entity.user.let { userEntity ->
+                    if (userEntity == null) {
+                        throw IllegalArgumentException("User entity cannot be null for OrganisationMember")
+                    }
+
+                    return OrganisationMember(
+                        user = UserProfile.fromEntity(userEntity),
+                        organisationId = it.organisationId,
+                        role = entity.role,
+                        memberSince = entity.memberSince,
+                        organisation = organisation?.let { entity -> Organisation.fromEntity(entity) }
+                    )
+                }
+
             }
         }
     }
