@@ -1,6 +1,7 @@
 package paladin.core.service.organisation
 
 import io.github.oshai.kotlinlogging.KLogger
+import jakarta.transaction.Transactional
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
@@ -34,7 +35,11 @@ class OrganisationService(
         }
     }
 
+    /**
+     * Transactional given our createOrganisation method creates both an Organisation and its first member.
+     */
     @Throws(AccessDeniedException::class, IllegalArgumentException::class)
+    @Transactional
     fun createOrganisation(name: String, plan: OrganisationPlan): Organisation {
         // Gets the user ID from the auth token to act as the Organisation creator
         val userId: UUID = authTokenService.getUserId()
@@ -84,7 +89,11 @@ class OrganisationService(
         }
     }
 
+    /**
+     * Transactional given the need to delete all members associated with the organisation before deleting the organisation itself.
+     */
     @PreAuthorize("@organisationSecurity.hasOrgRoleOrHigher(#organisationId, 'OWNER')")
+    @Transactional
     fun deleteOrganisation(organisationId: UUID) {
         // Check if the organisation exists
         val organisation: OrganisationEntity = findOrThrow(organisationId, organisationRepository::findById)

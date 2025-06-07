@@ -78,7 +78,7 @@ end;
 $$;
 
 
-CREATE TYPE ORGANISATION_ROLE AS ENUM ('owner', 'admin', 'developer', 'readonly');
+CREATE TYPE ORGANISATION_ROLE AS ENUM ('OWNER', 'ADMIN', 'DEVELOPER', 'READONLY');
 
 CREATE TABLE IF NOT EXISTS ORGANISATION_MEMBERS
 (
@@ -95,7 +95,8 @@ ALTER TABLE public.organisation_members
 CREATE INDEX idx_organisation_members_user_id
     ON public.organisation_members (user_id);
 
-CREATE TYPE ORGANISATION_INVITE_STATUS AS ENUM ('pending', 'accepted', 'declined', 'expired');
+
+CREATE TYPE ORGANISATION_INVITE_STATUS AS ENUM ('PENDING', 'ACCEPTED', 'DECLINED', 'EXPIRED');
 
 CREATE TABLE IF NOT EXISTS ORGANISATION_INVITES
 (

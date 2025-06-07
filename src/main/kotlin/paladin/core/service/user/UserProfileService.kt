@@ -1,6 +1,7 @@
 package paladin.core.service.user
 
 import io.github.oshai.kotlinlogging.KLogger
+import jakarta.transaction.Transactional
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.stereotype.Service
 import paladin.core.exceptions.NotFoundException
@@ -66,6 +67,10 @@ class UserProfileService(
         return repository.findAllById(userIds).map { UserProfile.fromEntity(it) }
     }
 
+    /**
+     * Transactional given the need to delete all membership entities associated with this user from all related organisations.
+     */
+    @Transactional
     @Throws(NotFoundException::class)
     fun deleteUserProfile(userId: UUID) {
         findOrThrow(userId, repository::findById) // Ensure the user exists before deletion
