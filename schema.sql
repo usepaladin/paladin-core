@@ -1,5 +1,15 @@
+BEGIN;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 DROP TABLE IF EXISTS "user_profiles";
+DROP TABLE IF EXISTS "organisation_invites";
+DROP TABLE IF EXISTS "organisation_members";
+DROP TABLE IF EXISTS public.user_profiles;
+DROP TYPE IF EXISTS ORGANISATION_INVITE_STATUS;
+DROP TYPE IF EXISTS ORGANISATION_ROLE;
+DROP TABLE IF EXISTS organisations;
+DROP TABLE IF EXISTS user_profiles;
+
+COMMIT;
 
 CREATE TABLE IF NOT EXISTS "organisations"
 (
@@ -79,6 +89,12 @@ CREATE TABLE IF NOT EXISTS ORGANISATION_MEMBERS
     "member_since"    TIMESTAMP WITH TIME ZONE   DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE public.organisation_members
+    ADD CONSTRAINT ux_organisation_user UNIQUE (organisation_id, user_id);
+
+CREATE INDEX idx_organisation_members_user_id
+    ON public.organisation_members (user_id);
+
 CREATE TYPE ORGANISATION_INVITE_STATUS AS ENUM ('pending', 'accepted', 'declined', 'expired');
 
 CREATE TABLE IF NOT EXISTS ORGANISATION_INVITES
@@ -95,6 +111,9 @@ CREATE TABLE IF NOT EXISTS ORGANISATION_INVITES
 
 CREATE INDEX idx_invite_organisation_id ON public.organisation_invites (organisation_id);
 CREATE INDEX idx_invite_email ON public.organisation_invites (email);
+
+alter table organisation_invites
+    add constraint uq_invite_code unique (invite_code);
 
 -- Function to update member count
 CREATE OR REPLACE FUNCTION public.update_org_member_count()
@@ -143,18 +162,23 @@ CREATE POLICY "Users can view their own organisations" on organisations
 CREATE FUNCTION public.custom_access_token_hook()
     RETURNS jsonb
     LANGUAGE plpgsql
+    SECURITY definer
+    SET search_path = public
 AS
 $$
 DECLARE
     _roles jsonb;
 BEGIN
-    SELECT jsonb_agg(jsonb_build_object('organisation_id', organisation_id, 'role', role))
+    SELECT coalesce(
+                   jsonb_agg(jsonb_build_object('organisation_id', organisation_id, 'role', role)),
+                   '[]'::jsonb)
     INTO _roles
     FROM organisation_members
     WHERE user_id = (auth.uid());
     RETURN jsonb_build_object('roles', _roles);
 END;
 $$;
+
 
 GRANT ALL ON FUNCTION public.custom_access_token_hook TO supabase_auth_admin;
 

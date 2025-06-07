@@ -27,7 +27,7 @@ data class OrganisationInviteEntity(
     @GeneratedValue
     @Column(columnDefinition = "UUID DEFAULT uuid_generate_v4()", updatable = false, nullable = false)
     val id: UUID? = null,
-    
+
     @Column(name = "organisation_id", columnDefinition = "UUID", nullable = false)
     val organisationId: UUID,
 
@@ -62,4 +62,5 @@ data class OrganisationInviteEntity(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "invited_by", referencedColumnName = "id", insertable = false, updatable = false)
     var invitedByUser: UserEntity? = null
+    
 }

@@ -191,9 +191,9 @@ class OrganisationServiceTest {
         }
 
         // Assert user can delete organisation given `Owner` privileges
-        organisationService.deleteOrganisation(organisationId1).run {
-            assert(true) { "Organisation deletion should not throw an exception" }
-        }
+        organisationService.deleteOrganisation(organisationId1)
+        // Verify the delete was called
+        Mockito.verify(organisationRepository).deleteById(organisationId1)
     }
 
     @Test

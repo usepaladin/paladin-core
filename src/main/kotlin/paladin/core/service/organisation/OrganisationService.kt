@@ -163,7 +163,7 @@ class OrganisationService(
                 }
 
                 organisationMemberRepository.save(this)
-                logger.info { "Member with ID ${member.user.id} role updated to ${member.role} in organisation $organisationId successfully." }
+                logger.info { "Member with ID ${member.user.id} role updated to $role in organisation $organisationId successfully." }
                 return OrganisationMember.fromEntity(this)
             }
         }

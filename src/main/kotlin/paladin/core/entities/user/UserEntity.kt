@@ -46,15 +46,10 @@ data class UserEntity(
 ) {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "default_organisation_id", referencedColumnName = "id", insertable = false, updatable = true)
+    @JoinColumn(name = "default_organisation_id", referencedColumnName = "id", insertable = true, updatable = true)
     var defaultOrganisation: OrganisationEntity? = null
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "organisation_members",
-        schema = "public",
-        joinColumns = [JoinColumn(name = "user_id", referencedColumnName = "id")],
-    )
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     var organisations: MutableSet<OrganisationMemberEntity> = mutableSetOf()
 
     @PrePersist

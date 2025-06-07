@@ -73,11 +73,13 @@ class AuthTokenService(private val logger: KLogger) {
                     try {
                         OrganisationRole(UUID.fromString(orgIdStr), roleStr)
                     } catch (e: Exception) {
+                        logger.warn { "Failed to parse organisation role: orgId=$orgIdStr, role=$roleStr, error=${e.message}" }
                         null
                     }
                 } else null
             } ?: emptyList()
         } catch (e: Exception) {
+            logger.warn { "Failed to extract organisation roles from JWT: ${e.message}" }
             emptyList()
         }
     }

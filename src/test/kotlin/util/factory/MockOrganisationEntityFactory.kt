@@ -46,14 +46,15 @@ object MockOrganisationEntityFactory {
         email: String,
         organisationId: UUID,
         role: OrganisationRoles = OrganisationRoles.DEVELOPER,
-        token: String = UUID.randomUUID().toString().substring(0, 12),
+        token: String = UUID.randomUUID().toString().replace("-", "").substring(0, 12),
+        invitedBy: UUID = UUID.randomUUID()
     ) = OrganisationInviteEntity(
         id = UUID.randomUUID(),
         email = email,
         organisationId = organisationId,
         role = role,
         token = token,
-        invitedBy = UUID.randomUUID()
+        invitedBy = invitedBy
     )
 
 

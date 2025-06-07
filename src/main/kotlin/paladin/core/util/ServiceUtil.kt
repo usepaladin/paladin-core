@@ -6,7 +6,7 @@ import java.util.*
 object ServiceUtil {
 
     /**
-     * Finds a user profile by the given query and returns it as its mapped DTO.
+     * Finds an entity by the given query and returns it, or throws NotFoundException if not found.
      */
     @Throws(NotFoundException::class)
     fun <T, V> findOrThrow(data: T, query: (T) -> Optional<V>): V {

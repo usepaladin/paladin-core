@@ -86,7 +86,7 @@ object JwtTestUtil {
     }
 }
 
-@Target
+@Target(AnnotationTarget.ANNOTATION_CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class OrganisationRole(val organisationId: String, val role: OrganisationRoles)
 
@@ -141,7 +141,7 @@ class WithUserPersonaExtension : BeforeEachCallback, AfterEachCallback {
 
             // Set JwtAuthenticationToken in SecurityContext
             val authorities = annotation.roles.map {
-                SimpleGrantedAuthority("ROLE_${it.organisationId}_${it.role.toString().uppercase(Locale.getDefault())}")
+                SimpleGrantedAuthority("ROLE_${it.organisationId}_${it.role.toString().uppercase(Locale.ROOT)}")
             }
             val auth = JwtAuthenticationToken(jwt, authorities)
             SecurityContextHolder.getContext().authentication = auth
