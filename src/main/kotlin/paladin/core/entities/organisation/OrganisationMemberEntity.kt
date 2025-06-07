@@ -17,7 +17,7 @@ data class OrganisationMemberEntity(
 
     @Enumerated(EnumType.STRING)
     @Column(name = "user_role", nullable = false, updatable = true)
-    val role: OrganisationRoles,
+    var role: OrganisationRoles,
 
     @Column(name = "member_since", nullable = false, updatable = false)
     val memberSince: ZonedDateTime = ZonedDateTime.now(),

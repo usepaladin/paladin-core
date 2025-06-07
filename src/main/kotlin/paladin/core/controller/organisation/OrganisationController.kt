@@ -1,8 +1,11 @@
 package paladin.core.controller.organisation
 
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import paladin.core.enums.organisation.OrganisationRoles
 import paladin.core.models.organisation.Organisation
+import paladin.core.models.organisation.OrganisationMember
 import paladin.core.service.organisation.OrganisationService
 import java.util.*
 
@@ -18,12 +21,22 @@ class OrganisationController(
         @PathVariable organisationId: UUID,
         @RequestParam includeMembers: Boolean = false
     ): ResponseEntity<Organisation> {
-        TODO()
+        val organisation: Organisation = this.organisationService.getOrganisation(
+            organisationId = organisationId,
+            includeMembers = includeMembers
+        )
+
+        return ResponseEntity.ok(organisation)
     }
 
     @PostMapping("/")
     fun createOrganisation(@RequestBody organisation: Organisation): ResponseEntity<Organisation> {
-        TODO()
+        val createdOrganisation: Organisation = this.organisationService.createOrganisation(
+            name = organisation.name,
+            plan = organisation.plan
+        )
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdOrganisation)
     }
 
 
@@ -31,14 +44,41 @@ class OrganisationController(
     fun updateOrganisation(
         @RequestBody organisation: Organisation
     ): ResponseEntity<Organisation> {
-        TODO()
+        val updatedOrganisation: Organisation = this.organisationService.updateOrganisation(
+            organisation = organisation
+        )
+
+        return ResponseEntity.ok(updatedOrganisation)
     }
-
-
+    
     @DeleteMapping("/{organisationId}")
     fun deleteOrganisation(
         @PathVariable organisationId: UUID
     ): ResponseEntity<Void> {
-        TODO()
+        this.organisationService.deleteOrganisation(organisationId)
+        return ResponseEntity.ok().build()
+    }
+
+    @DeleteMapping("/{organisationId}/member")
+    fun removeMemberFromOrganisation(
+        @PathVariable organisationId: UUID,
+        @RequestBody member: OrganisationMember
+    ): ResponseEntity<Void> {
+        this.organisationService.removeMemberFromOrganisation(organisationId, member)
+        return ResponseEntity.ok().build()
+    }
+
+    @PutMapping("/{organisationId}/member/role/{role}")
+    fun updateMemberRole(
+        @PathVariable organisationId: UUID,
+        @PathVariable role: OrganisationRoles,
+        @RequestBody member: OrganisationMember
+    ): ResponseEntity<OrganisationMember> {
+        val updatedMember: OrganisationMember = this.organisationService.updateMemberRole(
+            organisationId = organisationId,
+            member = member,
+            updatedRole = role
+        )
+        return ResponseEntity.ok(updatedMember)
     }
 }

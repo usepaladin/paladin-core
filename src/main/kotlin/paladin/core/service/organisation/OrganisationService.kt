@@ -71,12 +71,20 @@ class OrganisationService(
         )
     }
 
-    @PreAuthorize("hasOrgRoleOrHigher(#organisation.id, 'ADMIN')")
-    fun updateOrganisation(organisation: Organisation) {
+    @PreAuthorize("@organisationSecurity.hasOrgRoleOrHigher(#organisation.id, 'ADMIN')")
+    fun updateOrganisation(organisation: Organisation): Organisation {
+        findOrThrow(organisation.id, organisationRepository::findById).run {
+            val entity = this.apply {
+                name = organisation.name
+                plan = organisation.plan
+            }
 
+            // Save the updated organisation entity
+            return Organisation.fromEntity(organisationRepository.save(entity))
+        }
     }
 
-    @PreAuthorize("hasOrgRoleOrHigher(#organisationId, 'OWNER')")
+    @PreAuthorize("@organisationSecurity.hasOrgRoleOrHigher(#organisationId, 'OWNER')")
     fun deleteOrganisation(organisationId: UUID) {
         // Check if the organisation exists
         val organisation: OrganisationEntity = findOrThrow(organisationId, organisationRepository::findById)
@@ -88,5 +96,68 @@ class OrganisationService(
         organisationRepository.delete(organisation)
 
         logger.info { "Organisation with ID $organisationId deleted successfully." }
+    }
+
+    /**
+     * Invoked from Invitation accept action. Users cannot directly add others to an organisation.
+     */
+    fun addMemberToOrganisation() {
+
+    }
+
+    /**
+     * Allow permission to remove member from organisation under the following conditions:
+     *  - The user is the owner of the organisation
+     *  - The user is an admin and has a role higher than the member's role (ie. ADMIN can remove DEVELOPER/READONLY, but not OWNER or ADMIN)
+     *  - The user is trying to remove themselves from the organisation
+     */
+    @PreAuthorize(
+        """
+           @organisationSecurity.hasOrgRole(#organisationId, 'OWNER') 
+        or (@organisationSecurity.hasOrgRoleOrHigher(#organisationId, 'ADMIN') and @organisationSecurity.hasHigherOrgRole(#organisationId, member.role)) 
+        or (#member.user.id == authentication.principal.id) 
+        """
+    )
+    fun removeMemberFromOrganisation(organisationId: UUID, member: OrganisationMember) {
+        OrganisationMemberEntity.OrganisationMemberKey(
+            organisationId = organisationId,
+            userId = member.user.id
+        ).run {
+            findOrThrow(this, organisationMemberRepository::findById)
+            organisationMemberRepository.deleteById(this)
+            logger.info { "Member with ID ${member.user.id} removed from organisation $organisationId successfully." }
+        }
+    }
+
+    /**
+     * Allow permission to update a member's role in the organisation under the following conditions:
+     *  - The user is the owner of the organisation
+     *  - The user is an admin and has a role higher than the member's role (ie. ADMIN can alter roles of DEVELOPER/READONLY users, but not OWNER or ADMIN)
+     */
+    @PreAuthorize(
+        """
+        @organisationSecurity.hasOrgRole(#organisationId, 'OWNER') 
+        or (@organisationSecurity.hasOrgRoleOrHigher(#organisationId, 'ADMIN') and @organisationSecurity.hasHigherOrgRole(#organisationId, member.role)) 
+        """
+    )
+    fun updateMemberRole(
+        organisationId: UUID,
+        member: OrganisationMember,
+        updatedRole: OrganisationRoles
+    ): OrganisationMember {
+        OrganisationMemberEntity.OrganisationMemberKey(
+            organisationId = organisationId,
+            userId = member.user.id
+        ).run {
+            findOrThrow(this, organisationMemberRepository::findById).run {
+                this.apply {
+                    role = updatedRole
+                }
+
+                organisationMemberRepository.save(this)
+                logger.info { "Member with ID ${member.user.id} role updated to ${member.role} in organisation $organisationId successfully." }
+                return OrganisationMember.fromEntity(this)
+            }
+        }
     }
 }
