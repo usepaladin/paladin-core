@@ -1,4 +1,4 @@
-package util.user
+package util.factory
 
 import paladin.core.entities.user.UserEntity
 import java.time.ZonedDateTime
