@@ -3,6 +3,7 @@ package util.factory
 import paladin.core.entities.organisation.OrganisationEntity
 import paladin.core.entities.organisation.OrganisationInviteEntity
 import paladin.core.entities.organisation.OrganisationMemberEntity
+import paladin.core.entities.user.UserEntity
 import paladin.core.enums.organisation.OrganisationPlan
 import paladin.core.enums.organisation.OrganisationRoles
 import java.util.*
@@ -20,16 +21,26 @@ object MockOrganisationEntityFactory {
     )
 
     fun createOrganisationMember(
-        userId: UUID,
+        user: UserEntity,
         organisationId: UUID,
         role: OrganisationRoles = OrganisationRoles.DEVELOPER,
-    ) = OrganisationMemberEntity(
-        id = OrganisationMemberEntity.OrganisationMemberKey(
-            organisationId = organisationId,
-            userId = userId
-        ),
-        role = role
-    )
+    ): OrganisationMemberEntity {
+        user.id.let {
+            if (it == null) {
+                throw IllegalArgumentException("User ID must not be null")
+            }
+
+            return OrganisationMemberEntity(
+                id = OrganisationMemberEntity.OrganisationMemberKey(
+                    organisationId = organisationId,
+                    userId = it
+                ),
+                role = role,
+            ).apply {
+                this.user = user
+            }
+        }
+    }
 
     fun createOrganisationInvite(
         email: String,
