@@ -24,7 +24,7 @@ data class OrganisationMemberEntity(
 ) {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id", insertable = false, updatable = false)
-    val user: UserEntity? = null
+    var user: UserEntity? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(

@@ -50,7 +50,7 @@ class OrganisationController(
 
         return ResponseEntity.ok(updatedOrganisation)
     }
-    
+
     @DeleteMapping("/{organisationId}")
     fun deleteOrganisation(
         @PathVariable organisationId: UUID
@@ -77,7 +77,7 @@ class OrganisationController(
         val updatedMember: OrganisationMember = this.organisationService.updateMemberRole(
             organisationId = organisationId,
             member = member,
-            updatedRole = role
+            role = role
         )
         return ResponseEntity.ok(updatedMember)
     }

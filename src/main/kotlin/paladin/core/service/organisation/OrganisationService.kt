@@ -113,12 +113,15 @@ class OrganisationService(
      */
     @PreAuthorize(
         """
-           @organisationSecurity.hasOrgRole(#organisationId, 'OWNER') 
-        or (@organisationSecurity.hasOrgRoleOrHigher(#organisationId, 'ADMIN') and @organisationSecurity.hasHigherOrgRole(#organisationId, member.role)) 
-        or (#member.user.id == authentication.principal.id) 
+           @organisationSecurity.isUpdatingOrganisationMember(#organisationId, #member) or @organisationSecurity.isUpdatingSelf(#member)
         """
     )
     fun removeMemberFromOrganisation(organisationId: UUID, member: OrganisationMember) {
+        // Assert that the removed member is not currently the owner of the organisation
+        if (member.role == OrganisationRoles.OWNER) {
+            throw IllegalArgumentException("Cannot remove the owner of the organisation. Please transfer ownership first.")
+        }
+
         OrganisationMemberEntity.OrganisationMemberKey(
             organisationId = organisationId,
             userId = member.user.id
@@ -136,22 +139,27 @@ class OrganisationService(
      */
     @PreAuthorize(
         """
-        @organisationSecurity.hasOrgRole(#organisationId, 'OWNER') 
-        or (@organisationSecurity.hasOrgRoleOrHigher(#organisationId, 'ADMIN') and @organisationSecurity.hasHigherOrgRole(#organisationId, member.role)) 
+        @organisationSecurity.isUpdatingOrganisationMember(#organisationId, #member)
         """
     )
     fun updateMemberRole(
         organisationId: UUID,
         member: OrganisationMember,
-        updatedRole: OrganisationRoles
+        role: OrganisationRoles
     ): OrganisationMember {
+
+        // Ensure that if the new role is that of OWNER, that only the current owner can assign it
+        if (role == OrganisationRoles.OWNER || member.role == OrganisationRoles.OWNER) {
+            throw IllegalArgumentException("Transfer of ownership must be done through a dedicated transfer ownership method.")
+        }
+
         OrganisationMemberEntity.OrganisationMemberKey(
             organisationId = organisationId,
             userId = member.user.id
         ).run {
             findOrThrow(this, organisationMemberRepository::findById).run {
                 this.apply {
-                    role = updatedRole
+                    this.role = role
                 }
 
                 organisationMemberRepository.save(this)

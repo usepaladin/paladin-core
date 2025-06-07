@@ -1,8 +1,10 @@
 package paladin.core.configuration.auth
 
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Component
 import paladin.core.enums.organisation.OrganisationRoles
+import paladin.core.models.organisation.OrganisationMember
 import java.util.*
 
 @Component
@@ -75,5 +77,26 @@ class OrganisationSecurity {
         return OrganisationRoles.fromString(claim.removePrefix("ROLE_${organisationId}_")).let { role ->
             role != null && role.authority > targetRole.authority
         }
+    }
+
+    /**
+     * Allow permission to update a current member (ie. Updating role, or membership removal) under the following conditions:
+     *  - The user is the owner of the organisation
+     *  - The user is an admin and has a role higher than the member's role (ie. ADMIN can alter roles of DEVELOPER/READONLY users, but not OWNER or ADMIN)
+     */
+    fun isUpdatingOrganisationMember(organisationId: UUID, user: OrganisationMember): Boolean {
+        return this.hasOrgRole(organisationId, OrganisationRoles.OWNER) ||
+                (this.hasOrgRoleOrHigher(organisationId, OrganisationRoles.ADMIN) &&
+                        this.hasHigherOrgRole(organisationId, user.role))
+    }
+
+    fun isUpdatingSelf(member: OrganisationMember): Boolean {
+        return SecurityContextHolder.getContext().authentication.principal.let {
+            if (it !is Jwt) {
+                return false
+            }
+
+            it.claims["user_id"]
+        } == member.user.id.toString()
     }
 }
