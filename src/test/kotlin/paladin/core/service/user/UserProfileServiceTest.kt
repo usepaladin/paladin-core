@@ -4,16 +4,17 @@ import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.mockk.every
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit5.MockKExtension
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito
+import org.mockito.junit.jupiter.MockitoExtension
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import paladin.core.entities.user.UserEntity
 import paladin.core.models.user.User
 import paladin.core.repository.user.UserProfileRepository
@@ -24,7 +25,7 @@ import util.factory.MockUserEntityFactory
 import java.util.*
 
 @SpringBootTest
-@ExtendWith(MockKExtension::class)
+@ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
 @WithUserPersona(
     userId = "f8b1c2d3-4e5f-6789-abcd-ef0123456789",
@@ -36,7 +37,6 @@ class UserProfileServiceTest {
     private val userId: UUID = UUID.fromString("f8b1c2d3-4e5f-6789-abcd-ef0123456789")
     private val secondaryUserId: UUID = UUID.fromString("a1b2c3d4-5e6f-7890-abcd-ef0123456789")
 
-    private lateinit var userProfileService: UserProfileService
     private lateinit var testAppender: TestLogAppender
     private var logger: KLogger = KotlinLogging.logger {}
     private lateinit var logbackLogger: Logger
@@ -45,11 +45,6 @@ class UserProfileServiceTest {
     fun setUp() {
         logbackLogger = LoggerFactory.getLogger(logger.name) as Logger
         testAppender = TestLogAppender.factory(logbackLogger, Level.DEBUG)
-        userProfileService = UserProfileService(
-            repository = userProfileRepository,
-            authTokenService = authTokenService,
-            logger = logger
-        )
     }
 
     @AfterEach
@@ -61,8 +56,11 @@ class UserProfileServiceTest {
     @Autowired
     private lateinit var authTokenService: AuthTokenService
 
-    @MockK
+    @MockitoBean
     private lateinit var userProfileRepository: UserProfileRepository
+
+    @Autowired
+    private lateinit var userProfileService: UserProfileService
 
     @Test
     fun `handle user update with correct permissions`() {
@@ -73,7 +71,7 @@ class UserProfileServiceTest {
 
         )
 
-        every { userProfileRepository.findById(userId) } returns Optional.of(entity)
+        Mockito.`when`(userProfileRepository.findById(userId)).thenReturn(Optional.of(entity))
 
         val updatedEmail: String = "email2@email.com"
         val updatedEntity = entity.apply {
@@ -82,7 +80,7 @@ class UserProfileServiceTest {
 
         val userRepresentation = User.fromEntity(updatedEntity)
 
-        every { userProfileRepository.save(any()) } returns updatedEntity
+        Mockito.`when`(userProfileRepository.save(any())).thenReturn(updatedEntity)
         userProfileService.updateUserDetails(userRepresentation).let {
             assert(it.email == updatedEmail) { "User email was not updated correctly" }
             assert(it.id == userId) { "User ID does not match expected ID" }
@@ -121,7 +119,8 @@ class UserProfileServiceTest {
 
         ).let {
             it.run {
-                every { userProfileRepository.findById(userId) } returns Optional.of(it)
+                Mockito.`when`(userProfileRepository.findById(userId)).thenReturn(Optional.of(it))
+
             }
             User.fromEntity(it)
         }

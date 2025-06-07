@@ -140,7 +140,9 @@ class WithUserPersonaExtension : BeforeEachCallback, AfterEachCallback {
             )
 
             // Set JwtAuthenticationToken in SecurityContext
-            val authorities = annotation.roles.map { SimpleGrantedAuthority("ROLE_$it") }
+            val authorities = annotation.roles.map {
+                SimpleGrantedAuthority("ROLE_${it.organisationId}_${it.role.toString().uppercase(Locale.getDefault())}")
+            }
             val auth = JwtAuthenticationToken(jwt, authorities)
             SecurityContextHolder.getContext().authentication = auth
         }

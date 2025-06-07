@@ -1,21 +1,12 @@
 package paladin.core.configuration.auth
 
-import org.springframework.security.access.expression.SecurityExpressionRoot
-import org.springframework.security.access.expression.method.MethodSecurityExpressionOperations
-import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.stereotype.Component
 import paladin.core.enums.organisation.OrganisationRoles
 import java.util.*
 
-class SecurityExpressionRootConfiguration(
-    authentication: Authentication
-) : SecurityExpressionRoot(authentication), MethodSecurityExpressionOperations {
-
-    private var filterObject: Any? = null
-    private var returnObject: Any? = null
-    private var target: Any? = null
-
-
+@Component
+class OrganisationSecurity {
     fun hasOrgRole(organisationId: UUID, role: OrganisationRoles): Boolean {
         val authority: String = "ROLE_${organisationId}_$role"
 
@@ -64,23 +55,5 @@ class SecurityExpressionRootConfiguration(
         return OrganisationRoles.fromString(claim.removePrefix("ROLE_${organisationId}_")).let { role ->
             role != null && role.authority >= targetRole.authority
         }
-    }
-
-    override fun setFilterObject(filterObject: Any?) {
-        this.filterObject = filterObject
-    }
-
-    override fun getFilterObject(): Any? = filterObject
-
-    override fun setReturnObject(returnObject: Any?) {
-        this.returnObject = returnObject
-    }
-
-    override fun getReturnObject(): Any? = returnObject
-
-    override fun getThis(): Any? = target
-
-    fun setThis(target: Any?) {
-        this.target = target
     }
 }

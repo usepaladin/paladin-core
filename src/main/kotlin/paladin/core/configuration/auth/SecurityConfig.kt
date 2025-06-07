@@ -1,10 +1,8 @@
-package paladin.core.configuration
+package paladin.core.configuration.auth
 
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
-import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
@@ -12,8 +10,6 @@ import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.web.SecurityFilterChain
-import paladin.core.configuration.auth.CustomJwtAuthenticationConverter
-import paladin.core.configuration.auth.CustomMethodSecurityExpressionHandler
 import paladin.core.configuration.properties.SecurityConfigurationProperties
 import javax.crypto.spec.SecretKeySpec
 
@@ -43,9 +39,13 @@ class SecurityConfig(
                 }
             }
             .exceptionHandling { exceptions ->
-                exceptions.authenticationEntryPoint { _, response, authException ->
-                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.message)
-                }
+                exceptions
+                    .authenticationEntryPoint { _, response, authException ->
+                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.message)
+                    }.accessDeniedHandler { _, response, accessDeniedException ->
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN, accessDeniedException.message)
+                    }
+
             }
 
         return http.build()
@@ -56,9 +56,4 @@ class SecurityConfig(
         return NimbusJwtDecoder.withSecretKey(secretKey).build()
     }
 
-    @Bean
-    @Primary
-    fun methodSecurityExpressionHandler(): MethodSecurityExpressionHandler {
-        return CustomMethodSecurityExpressionHandler()
-    }
 }

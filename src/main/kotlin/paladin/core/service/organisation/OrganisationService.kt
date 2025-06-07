@@ -25,8 +25,9 @@ class OrganisationService(
     private val authTokenService: AuthTokenService
 ) {
 
-    @PreAuthorize("hasOrg(#organisationId)")
+
     @Throws(NotFoundException::class)
+    @PreAuthorize("@organisationSecurity.hasOrg(#organisationId)")
     fun getOrganisation(organisationId: UUID, includeMembers: Boolean = false): Organisation {
         return findOrThrow(organisationId, organisationRepository::findById).let {
             Organisation.fromEntity(it, includeMembers)

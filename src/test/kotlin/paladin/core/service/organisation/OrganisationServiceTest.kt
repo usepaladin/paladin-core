@@ -4,17 +4,19 @@ import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.mockk.every
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit5.MockKExtension
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.Mockito
+import org.mockito.junit.jupiter.MockitoExtension
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import paladin.core.entities.organisation.OrganisationEntity
 import paladin.core.enums.organisation.OrganisationRoles
 import paladin.core.repository.organisation.OrganisationMemberRepository
@@ -27,7 +29,7 @@ import util.factory.MockOrganisationEntityFactory
 import java.util.*
 
 @SpringBootTest
-@ExtendWith(MockKExtension::class)
+@ExtendWith(MockitoExtension::class)
 @ActiveProfiles("test")
 @WithUserPersona(
     userId = "f8b1c2d3-4e5f-6789-abcd-ef0123456789",
@@ -55,7 +57,6 @@ class OrganisationServiceTest {
     // Organisation Id to test access control with an org a user is not apart of
     private val organisationId3 = UUID.fromString("d8b1c2d3-4e5f-6789-abcd-ef9876543210")
 
-    private lateinit var organisationService: OrganisationService
     private lateinit var testAppender: TestLogAppender
     private var logger: KLogger = KotlinLogging.logger {}
     private lateinit var logbackLogger: Logger
@@ -63,22 +64,21 @@ class OrganisationServiceTest {
     @Autowired
     private lateinit var authTokenService: AuthTokenService
 
-    @MockK
+    @MockitoBean
     private lateinit var organisationRepository: OrganisationRepository
 
-    @MockK
+    @MockitoBean
     private lateinit var organisationMemberRepository: OrganisationMemberRepository
+
+    @Autowired
+    private lateinit var organisationService: OrganisationService
+
 
     @BeforeEach
     fun setUp() {
         logbackLogger = LoggerFactory.getLogger(logger.name) as Logger
         testAppender = TestLogAppender.factory(logbackLogger, Level.DEBUG)
-        organisationService = OrganisationService(
-            organisationRepository = organisationRepository,
-            organisationMemberRepository = organisationMemberRepository,
-            logger = logger,
-            authTokenService = authTokenService,
-        )
+
     }
 
     @AfterEach
@@ -95,7 +95,7 @@ class OrganisationServiceTest {
             name = "Test Organisation",
         )
 
-        every { organisationRepository.findById(organisationId1) } returns Optional.of(entity)
+        Mockito.`when`(organisationRepository.findById(organisationId1)).thenReturn(Optional.of(entity))
         val organisation = organisationService.getOrganisation(organisationId1)
         assert(organisation.id == organisationId1)
 
@@ -103,10 +103,37 @@ class OrganisationServiceTest {
 
     @Test
     fun `handle organisation fetch without required organisation`() {
+        val entity: OrganisationEntity = MockOrganisationEntityFactory.createOrganisation(
+            // This is the organisation the user does not have access to
+            id = organisationId3,
+            name = "Test Organisation 3",
+        )
+
+        Mockito.`when`(organisationRepository.findById(organisationId3)).thenReturn(Optional.of(entity))
+
+        assertThrows<AccessDeniedException> {
+            organisationService.getOrganisation(organisationId3)
+        }
     }
 
     @Test
     fun `handle organisation invocation without required permission`() {
+        val entity: OrganisationEntity = MockOrganisationEntityFactory.createOrganisation(
+            // This is the organisation the user is not the owner of
+            id = organisationId2,
+            name = "Test Organisation 2",
+        )
+
+        Mockito.`when`(organisationRepository.findById(organisationId2)).thenReturn(Optional.of(entity))
+        // Assert user can fetch the organisation given org roles
+        organisationService.getOrganisation(organisationId2).run {
+            assert(id == organisationId2) { "Organisation ID does not match expected ID" }
+            assert(name == "Test Organisation 2") { "Organisation name does not match expected name" }
+        }
+        // Assert user cannot delete organisation given lack of `Owner` privileges
+        assertThrows<AccessDeniedException> {
+            organisationService.deleteOrganisation(organisationId2)
+        }
     }
 
 
