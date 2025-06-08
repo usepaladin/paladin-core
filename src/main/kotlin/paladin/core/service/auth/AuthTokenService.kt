@@ -7,6 +7,7 @@ import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.stereotype.Service
 import paladin.core.configuration.auth.OrganisationRole
+import paladin.core.enums.organisation.OrganisationRoles
 import java.util.*
 
 @Service
@@ -43,6 +44,17 @@ class AuthTokenService(private val logger: KLogger) {
 
     }
 
+    fun getUserEmail(): String {
+        return getJwt().claims["email"].let {
+            if (it == null) {
+                logger.warn { "Email not found in JWT claims" }
+                throw AccessDeniedException("Email not found in JWT claims")
+            } else {
+                it.toString()
+            }
+        }
+    }
+
     /**
      * Retrieves all associated user metadata from the JWT Claim
      */
@@ -71,7 +83,7 @@ class AuthTokenService(private val logger: KLogger) {
                 val roleStr = role["role"]?.toString()
                 if (orgIdStr != null && roleStr != null) {
                     try {
-                        OrganisationRole(UUID.fromString(orgIdStr), roleStr)
+                        OrganisationRole(UUID.fromString(orgIdStr), OrganisationRoles.fromString(roleStr))
                     } catch (e: Exception) {
                         logger.warn { "Failed to parse organisation role: orgId=$orgIdStr, role=$roleStr, error=${e.message}" }
                         null

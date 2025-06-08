@@ -39,7 +39,7 @@ data class OrganisationInviteEntity(
     val role: OrganisationRoles = OrganisationRoles.DEVELOPER,
 
     @Column(name = "invite_code", length = 12, nullable = false)
-    val token: String,
+    val token: String = UUID.randomUUID().toString().replace("-", "").substring(0, 12),
 
     @Column(name = "invited_by", nullable = false, columnDefinition = "UUID")
     val invitedBy: UUID,
@@ -62,5 +62,5 @@ data class OrganisationInviteEntity(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "invited_by", referencedColumnName = "id", insertable = false, updatable = false)
     var invitedByUser: UserEntity? = null
-    
+
 }

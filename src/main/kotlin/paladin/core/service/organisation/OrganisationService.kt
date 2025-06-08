@@ -110,7 +110,7 @@ class OrganisationService(
     /**
      * Invoked from Invitation accept action. Users cannot directly add others to an organisation.
      */
-    fun addMemberToOrganisation() {
+    fun addMemberToOrganisation(organisationId: UUID, userId: UUID, role: OrganisationRoles) {
 
     }
 
