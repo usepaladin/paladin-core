@@ -110,8 +110,20 @@ class OrganisationService(
     /**
      * Invoked from Invitation accept action. Users cannot directly add others to an organisation.
      */
-    fun addMemberToOrganisation(organisationId: UUID, userId: UUID, role: OrganisationRoles) {
+    fun addMemberToOrganisation(organisationId: UUID, userId: UUID, role: OrganisationRoles): OrganisationMember {
+        // Create and save the new member entity
+        val key = OrganisationMemberEntity.OrganisationMemberKey(
+            organisationId = organisationId,
+            userId = userId
+        )
 
+        return OrganisationMemberEntity(key, role).run {
+            organisationMemberRepository.save(this).let { entity ->
+                OrganisationMember.fromEntity(entity)
+            }.also {
+                logger.info { "User with ID $userId added to organisation $organisationId with role $role." }
+            }
+        }
     }
 
     /**

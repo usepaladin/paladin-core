@@ -59,11 +59,12 @@ class InviteController(
         return ResponseEntity.ok(invites)
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/organisation/{organisationId}/invitation/{id}")
     fun revokeInvite(
+        @PathVariable organisationId: UUID,
         @PathVariable id: UUID
     ): ResponseEntity<Unit> {
-        organisationInviteService.revokeOrganisationInvite(id)
+        organisationInviteService.revokeOrganisationInvite(organisationId, id)
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build()
     }
 
