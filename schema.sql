@@ -112,6 +112,7 @@ CREATE TABLE IF NOT EXISTS ORGANISATION_INVITES
 
 CREATE INDEX idx_invite_organisation_id ON public.organisation_invites (organisation_id);
 CREATE INDEX idx_invite_email ON public.organisation_invites (email);
+CREATE INDEX idx_invite_token ON public.organisation_invites (invite_code);
 
 alter table organisation_invites
     add constraint uq_invite_code unique (invite_code);
