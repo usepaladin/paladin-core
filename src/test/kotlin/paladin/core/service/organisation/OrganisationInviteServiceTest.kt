@@ -226,7 +226,7 @@ class OrganisationInviteServiceTest {
     )
     fun `handle invitation acceptance`() {
         val userEmail = "email@email.com"
-        val token: String = UUID.randomUUID().toString().replace("-", "").substring(0, 12)
+        val token: String = OrganisationInviteEntity.generateSecureToken()
 
         // Organisation that the user is an owner of, so has permissions to invite users to
         val organisation1: OrganisationEntity = MockOrganisationEntityFactory.createOrganisation(
@@ -282,7 +282,7 @@ class OrganisationInviteServiceTest {
     )
     fun `handle invitation rejection`() {
         val userEmail = "email@email.com"
-        val token: String = UUID.randomUUID().toString().replace("-", "").substring(0, 12)
+        val token: String = OrganisationInviteEntity.generateSecureToken()
 
         // Organisation that the user is an owner of, so has permissions to invite users to
         val organisation1: OrganisationEntity = MockOrganisationEntityFactory.createOrganisation(
@@ -308,7 +308,7 @@ class OrganisationInviteServiceTest {
         Mockito.`when`(organisationInviteRepository.save(Mockito.any<OrganisationInviteEntity>()))
             .thenReturn(inviteEntity.let {
                 it.copy().apply {
-                    inviteStatus = OrganisationInviteStatus.ACCEPTED
+                    inviteStatus = OrganisationInviteStatus.DECLINED
                 }
             })
         Mockito.`when`(organisationMemberRepository.save(Mockito.any<OrganisationMemberEntity>()))
@@ -339,7 +339,7 @@ class OrganisationInviteServiceTest {
     fun `handle rejection if trying to accept an invitation that is not meant for the user`() {
         // Ensure email does not match current email in JWT
         val userEmail = "email2@email.com"
-        val token: String = UUID.randomUUID().toString().replace("-", "").substring(0, 12)
+        val token: String = OrganisationInviteEntity.generateSecureToken()
 
         val inviteEntity: OrganisationInviteEntity = MockOrganisationEntityFactory.createOrganisationInvite(
             email = userEmail,
@@ -365,7 +365,7 @@ class OrganisationInviteServiceTest {
     fun `handle rejection if trying to accept an invitation that is not pending`() {
         // Ensure email does not match current email in JWT
         val userEmail = "email@email.com"
-        val token: String = UUID.randomUUID().toString().replace("-", "").substring(0, 12)
+        val token: String = OrganisationInviteEntity.generateSecureToken()
 
         val inviteEntity: OrganisationInviteEntity = MockOrganisationEntityFactory.createOrganisationInvite(
             email = userEmail,

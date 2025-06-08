@@ -39,7 +39,7 @@ data class OrganisationInviteEntity(
     val role: OrganisationRoles = OrganisationRoles.DEVELOPER,
 
     @Column(name = "invite_code", length = 12, nullable = false)
-    val token: String = UUID.randomUUID().toString().replace("-", "").substring(0, 12),
+    val token: String = this.generateSecureToken(),
 
     @Column(name = "invited_by", nullable = false, columnDefinition = "UUID")
     val invitedBy: UUID,
@@ -63,4 +63,13 @@ data class OrganisationInviteEntity(
     @JoinColumn(name = "invited_by", referencedColumnName = "id", insertable = false, updatable = false)
     var invitedByUser: UserEntity? = null
 
+
+    companion object Factory {
+        fun generateSecureToken(): String {
+            val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+            return (1..12)
+                .map { chars.random() }
+                .joinToString("")
+        }
+    }
 }

@@ -81,7 +81,7 @@ class OrganisationInviteService(
             }
 
             if (invitation.inviteStatus != OrganisationInviteStatus.PENDING) {
-                throw IllegalArgumentException("Cannot decline an invitation that is not pending.")
+                throw IllegalArgumentException("Cannot respond to an invitation that is not pending.")
             }
 
             // Handle invitation acceptance - Add user as a member of an organisation

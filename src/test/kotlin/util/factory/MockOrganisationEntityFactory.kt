@@ -50,7 +50,7 @@ object MockOrganisationEntityFactory {
         email: String,
         organisationId: UUID,
         role: OrganisationRoles = OrganisationRoles.DEVELOPER,
-        token: String = UUID.randomUUID().toString().replace("-", "").substring(0, 12),
+        token: String = OrganisationInviteEntity.generateSecureToken(),
         invitedBy: UUID = UUID.randomUUID(),
         status: OrganisationInviteStatus = OrganisationInviteStatus.PENDING
     ) = OrganisationInviteEntity(

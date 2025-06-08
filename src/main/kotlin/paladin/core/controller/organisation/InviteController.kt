@@ -8,7 +8,8 @@ import paladin.core.models.organisation.OrganisationInvite
 import paladin.core.service.organisation.OrganisationInviteService
 import java.util.*
 
-@RestController("/api/v1/organisation/invite")
+@RestController
+@RequestMapping("/api/v1/organisation/invite")
 class InviteController(
     private val organisationInviteService: OrganisationInviteService
 ) {
@@ -31,7 +32,7 @@ class InviteController(
     @PostMapping("/accept/{inviteToken}")
     fun acceptInvite(
         @PathVariable inviteToken: String
-    ): ResponseEntity<OrganisationInvite> {
+    ): ResponseEntity<Unit> {
         organisationInviteService.handleInvitationResponse(inviteToken, accepted = true)
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build()
     }
@@ -39,7 +40,7 @@ class InviteController(
     @PostMapping("/reject/{inviteToken}")
     fun rejectInvite(
         @PathVariable inviteToken: String
-    ): ResponseEntity<OrganisationInvite> {
+    ): ResponseEntity<Unit> {
         organisationInviteService.handleInvitationResponse(inviteToken, accepted = false)
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build()
     }
