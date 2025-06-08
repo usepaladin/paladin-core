@@ -54,9 +54,7 @@ class OrganisationSecurity {
             it.authorities.firstOrNull { claim -> claim.authority.startsWith("ROLE_$organisationId") } ?: return false
         }.toString()
 
-        return OrganisationRoles.fromString(claim.removePrefix("ROLE_${organisationId}_")).let { role ->
-            role != null && role.authority >= targetRole.authority
-        }
+        return OrganisationRoles.fromString(claim.removePrefix("ROLE_${organisationId}_")).authority >= targetRole.authority
     }
 
     fun hasHigherOrgRole(
@@ -74,9 +72,7 @@ class OrganisationSecurity {
             it.authorities.firstOrNull { claim -> claim.authority.startsWith("ROLE_$organisationId") } ?: return false
         }.toString()
 
-        return OrganisationRoles.fromString(claim.removePrefix("ROLE_${organisationId}_")).let { role ->
-            role != null && role.authority > targetRole.authority
-        }
+        return OrganisationRoles.fromString(claim.removePrefix("ROLE_${organisationId}_")).authority > targetRole.authority
     }
 
     /**

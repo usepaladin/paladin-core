@@ -62,13 +62,6 @@ class OrganisationServiceTest {
     // Organisation Id to test access control with an org a user is not apart of
     private val organisationId3 = UUID.fromString("d8b1c2d3-4e5f-6789-abcd-ef9876543210")
 
-    private lateinit var testAppender: TestLogAppender
-    private var logger: KLogger = KotlinLogging.logger {}
-    private lateinit var logbackLogger: Logger
-
-    @Autowired
-    private lateinit var authTokenService: AuthTokenService
-
     @MockitoBean
     private lateinit var organisationRepository: OrganisationRepository
 
@@ -77,21 +70,6 @@ class OrganisationServiceTest {
 
     @Autowired
     private lateinit var organisationService: OrganisationService
-
-
-    @BeforeEach
-    fun setUp() {
-        logbackLogger = LoggerFactory.getLogger(logger.name) as Logger
-        testAppender = TestLogAppender.factory(logbackLogger, Level.DEBUG)
-
-    }
-
-    @AfterEach
-    fun tearDown() {
-        logbackLogger.detachAppender(testAppender)
-        testAppender.stop()
-    }
-
 
     @Test
     fun `handle organisation fetch with appropriate permissions`() {
@@ -193,7 +171,7 @@ class OrganisationServiceTest {
         // Assert user can delete organisation given `Owner` privileges
         organisationService.deleteOrganisation(organisationId1)
         // Verify the delete was called
-        Mockito.verify(organisationRepository).deleteById(organisationId1)
+        Mockito.verify(organisationRepository).delete(Mockito.any<OrganisationEntity>())
     }
 
     @Test
@@ -562,7 +540,6 @@ class OrganisationServiceTest {
 
         val targetUserId = UUID.randomUUID()
         val targetUser2Id = UUID.randomUUID()
-        val targetUser3Id = UUID.randomUUID()
 
         val user1: UserEntity = MockUserEntityFactory.createUser(
             // Different user ID to test member removal

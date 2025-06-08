@@ -7,6 +7,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.stereotype.Component
+import paladin.core.enums.organisation.OrganisationRoles
 import java.util.*
 
 @Component
@@ -26,7 +27,7 @@ class CustomJwtAuthenticationConverter :
         val customClaims = extractCustomClaims(jwt)
         customClaims.roles.forEach { orgRole ->
             // Create authority in format: ROLE_<ORGANISATION_ID>_<ROLE>
-            val authority = "ROLE_${orgRole.organisationId}_${orgRole.role.uppercase()}"
+            val authority = "ROLE_${orgRole.organisationId}_${orgRole.role.toString().uppercase()}"
             authorities.add(SimpleGrantedAuthority(authority))
         }
 
@@ -51,7 +52,10 @@ class CustomJwtAuthenticationConverter :
                                 val roleStr = role["role"]?.toString()
                                 if (orgIdStr != null && roleStr != null) {
                                     try {
-                                        OrganisationRole(UUID.fromString(orgIdStr), roleStr)
+                                        OrganisationRole(
+                                            UUID.fromString(orgIdStr),
+                                            OrganisationRoles.fromString(roleStr)
+                                        )
                                     } catch (e: Exception) {
                                         null
                                     }
@@ -75,7 +79,7 @@ class CustomJwtAuthenticationConverter :
 data class OrganisationRole(
     @JsonProperty("organisation_id")
     val organisationId: UUID,
-    val role: String
+    val role: OrganisationRoles
 )
 
 data class CustomClaims(

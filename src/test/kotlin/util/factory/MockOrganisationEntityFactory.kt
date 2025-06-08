@@ -4,6 +4,7 @@ import paladin.core.entities.organisation.OrganisationEntity
 import paladin.core.entities.organisation.OrganisationInviteEntity
 import paladin.core.entities.organisation.OrganisationMemberEntity
 import paladin.core.entities.user.UserEntity
+import paladin.core.enums.organisation.OrganisationInviteStatus
 import paladin.core.enums.organisation.OrganisationPlan
 import paladin.core.enums.organisation.OrganisationRoles
 import java.util.*
@@ -14,11 +15,14 @@ object MockOrganisationEntityFactory {
         id: UUID = UUID.randomUUID(),
         name: String = "Test Organisation",
         plan: OrganisationPlan = OrganisationPlan.PRO,
+        members: MutableSet<OrganisationMemberEntity> = mutableSetOf()
     ) = OrganisationEntity(
         id = id,
         name = name,
         plan = plan,
-    )
+    ).apply {
+        this.members = members
+    }
 
     fun createOrganisationMember(
         user: UserEntity,
@@ -46,14 +50,16 @@ object MockOrganisationEntityFactory {
         email: String,
         organisationId: UUID,
         role: OrganisationRoles = OrganisationRoles.DEVELOPER,
-        token: String = UUID.randomUUID().toString().replace("-", "").substring(0, 12),
-        invitedBy: UUID = UUID.randomUUID()
+        token: String = OrganisationInviteEntity.generateSecureToken(),
+        invitedBy: UUID = UUID.randomUUID(),
+        status: OrganisationInviteStatus = OrganisationInviteStatus.PENDING
     ) = OrganisationInviteEntity(
         id = UUID.randomUUID(),
         email = email,
         organisationId = organisationId,
         role = role,
         token = token,
+        inviteStatus = status,
         invitedBy = invitedBy
     )
 
