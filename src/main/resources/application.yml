@@ -1,6 +1,14 @@
 spring:
   application:
     name: core
+  datasource:
+    url: ${POSTGRES_DB_JDBC}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
   security:
     oauth2:
       resourceserver:
@@ -12,4 +20,11 @@ paladin:
   security:
     jwt-secret-key: ${JWT_SECRET_KEY}
     jwt-issuer: ${JWT_ISSUER}
+    allowed-origins:
+      - ${ORIGIN_API_URL}
   include-stack-trace: true
+springdoc:
+  api-docs:
+    path: /docs/v3/api-docs
+  swagger-ui:
+    path: /docs/swagger-ui.html

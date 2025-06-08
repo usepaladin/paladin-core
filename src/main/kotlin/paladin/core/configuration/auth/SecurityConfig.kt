@@ -10,6 +10,7 @@ import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.web.cors.CorsConfigurationSource
 import paladin.core.configuration.properties.SecurityConfigurationProperties
 import javax.crypto.spec.SecretKeySpec
 
@@ -18,6 +19,7 @@ import javax.crypto.spec.SecretKeySpec
 @EnableMethodSecurity(prePostEnabled = true)
 class SecurityConfig(
     private val securityConfig: SecurityConfigurationProperties,
+
     private val jwtConverter: CustomJwtAuthenticationConverter
 ) {
 
@@ -26,10 +28,13 @@ class SecurityConfig(
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
+            .cors { it.configurationSource(corsConfig()) } // Enable CORS with the corsConfig bean
             .csrf { it.disable() } // Disable CSRF for stateless APIs
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) } // Stateless session
             .authorizeHttpRequests { auth ->
                 auth
+                    .requestMatchers("/actuator/**").permitAll() // Allow actuator endpoints
+                    .requestMatchers("/docs/**").permitAll() // Allow OpenAPI documentation
                     .requestMatchers("/public/**").permitAll() // Allow public endpoints
                     .anyRequest().authenticated() // Require authentication for all other endpoints
             }
@@ -54,6 +59,20 @@ class SecurityConfig(
     @Bean
     fun jwtDecoder(): JwtDecoder {
         return NimbusJwtDecoder.withSecretKey(secretKey).build()
+    }
+
+    @Bean
+    fun corsConfig(): CorsConfigurationSource {
+        val corsConfig = org.springframework.web.cors.CorsConfiguration()
+        corsConfig.allowedOrigins = securityConfig.allowedOrigins
+        corsConfig.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
+        corsConfig.allowedHeaders = listOf("*")
+        corsConfig.exposedHeaders = listOf("Authorization", "Content-Type")
+        corsConfig.allowCredentials = true
+
+        val source = org.springframework.web.cors.UrlBasedCorsConfigurationSource()
+        source.registerCorsConfiguration("/**", corsConfig)
+        return source
     }
 
 }
