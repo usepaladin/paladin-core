@@ -1,5 +1,6 @@
 package paladin.core.controller.organisation
 
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -10,6 +11,7 @@ import java.util.*
 
 @RestController
 @RequestMapping("/api/v1/organisation/invite")
+@Tag(name = "Organisation Invite Management", description = "Endpoints for managing organisation invitations")
 class InviteController(
     private val organisationInviteService: OrganisationInviteService
 ) {

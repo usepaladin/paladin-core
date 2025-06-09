@@ -118,7 +118,7 @@ class WithUserPersonaExtension : BeforeEachCallback, AfterEachCallback {
 
             // Create a Spring Security Jwt object
             val claims = mutableMapOf<String, Any>(
-                "user_id" to annotation.userId,
+                "sub" to annotation.userId,
                 "email" to annotation.email,
                 "role" to "authenticated",
                 "iss" to "https://abc.supabase.co/auth/v1",

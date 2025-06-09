@@ -19,13 +19,6 @@ class UserProfileService(
     private val logger: KLogger
 ) {
 
-    @Throws(NotFoundException::class)
-    fun getUserProfileByEmail(email: String): UserProfile {
-        return findOrThrow(email, repository::findByEmail).let {
-            UserProfile.fromEntity(it)
-        }
-    }
-
     @Throws(NotFoundException::class, IllegalArgumentException::class)
     fun getUserFromSession(): User {
         return authTokenService.getUserId().let {

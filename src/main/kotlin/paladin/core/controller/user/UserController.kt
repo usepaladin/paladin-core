@@ -1,5 +1,6 @@
 package paladin.core.controller.user
 
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import paladin.core.models.user.User
@@ -9,6 +10,7 @@ import java.util.*
 
 @RestController
 @RequestMapping("/api/v1/user")
+@Tag(name = "User Management", description = "Endpoints for managing user profiles and details")
 class UserController(
     private val profileService: UserProfileService
 ) {

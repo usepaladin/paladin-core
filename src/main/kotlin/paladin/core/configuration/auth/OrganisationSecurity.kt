@@ -92,7 +92,7 @@ class OrganisationSecurity {
                 return false
             }
 
-            it.claims["user_id"]
+            it.claims["sub"]
         } == member.user.id.toString()
     }
 }

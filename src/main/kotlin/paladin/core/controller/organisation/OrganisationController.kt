@@ -1,5 +1,6 @@
 package paladin.core.controller.organisation
 
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -11,6 +12,7 @@ import java.util.*
 
 @RestController
 @RequestMapping("/api/v1/organisation")
+@Tag(name = "Organisation Management", description = "Endpoints for managing organisations and their members")
 class OrganisationController(
     private val organisationService: OrganisationService
 ) {

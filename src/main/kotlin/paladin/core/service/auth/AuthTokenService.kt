@@ -33,7 +33,7 @@ class AuthTokenService(private val logger: KLogger) {
      */
     @Throws(AccessDeniedException::class, IllegalArgumentException::class)
     fun getUserId(): UUID {
-        return getJwt().claims["user_id"].let {
+        return getJwt().claims["sub"].let {
             if (it == null) {
                 logger.warn { "User ID not found in JWT claims" }
                 throw AccessDeniedException("User ID not found in JWT claims")

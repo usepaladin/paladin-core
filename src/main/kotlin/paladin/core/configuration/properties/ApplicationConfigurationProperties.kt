@@ -4,5 +4,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 
 @ConfigurationProperties(prefix = "paladin")
 data class ApplicationConfigurationProperties(
-    val includeStackTrace: Boolean = true
+    val includeStackTrace: Boolean = true,
 )
