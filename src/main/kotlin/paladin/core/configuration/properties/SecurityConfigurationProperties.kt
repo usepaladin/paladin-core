@@ -1,6 +1,7 @@
 package paladin.core.configuration.properties
 
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.Size
 import org.springframework.boot.context.properties.ConfigurationProperties
 
@@ -12,5 +13,7 @@ data class SecurityConfigurationProperties(
 
     @field:NotBlank(message = "JWT issuer must not be blank")
     val jwtIssuer: String,
-    val allowedOrigins: List<String> = listOf("*"),
+
+    @field:NotEmpty(message = "Allowed origins must not be empty")
+    val allowedOrigins: List<String>,
 )
