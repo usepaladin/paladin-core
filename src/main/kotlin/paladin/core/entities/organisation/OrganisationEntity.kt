@@ -2,13 +2,17 @@ package paladin.core.entities.organisation
 
 import jakarta.persistence.*
 import paladin.core.enums.organisation.OrganisationPlan
+import paladin.core.models.organisation.Organisation
 import java.time.ZonedDateTime
 import java.util.*
 
 @Entity
 @Table(
     name = "organisations",
-    schema = "public"
+    schema = "public",
+    uniqueConstraints = [
+        UniqueConstraint(name = "organisation_name_unique", columnNames = ["name"])
+    ]
 )
 data class OrganisationEntity(
     @Id
@@ -19,6 +23,9 @@ data class OrganisationEntity(
     @Column(name = "name", nullable = false, updatable = true)
     var name: String,
 
+    @Column(name = "avatarUrl", nullable = true, updatable = true)
+    var avatarUrl: String? = null,
+
     @Column(name = "plan", nullable = false, updatable = true)
     @Enumerated(EnumType.STRING)
     var plan: OrganisationPlan,
@@ -27,11 +34,35 @@ data class OrganisationEntity(
     val memberCount: Int = 0,
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    val createdAt: ZonedDateTime = ZonedDateTime.now(),
+    var createdAt: ZonedDateTime = ZonedDateTime.now(),
 
     @Column(name = "updated_at", nullable = false, updatable = true)
-    val updatedAt: ZonedDateTime = ZonedDateTime.now(),
+    var updatedAt: ZonedDateTime = ZonedDateTime.now(),
 ) {
     @OneToMany(mappedBy = "organisation", cascade = [CascadeType.ALL], fetch = FetchType.LAZY, orphanRemoval = true)
     var members: MutableSet<OrganisationMemberEntity> = mutableSetOf()
+
+    @PrePersist
+    fun onPrePersist() {
+        createdAt = ZonedDateTime.now()
+        updatedAt = ZonedDateTime.now()
+    }
+
+    @PreUpdate
+    fun onPreUpdate() {
+        updatedAt = ZonedDateTime.now()
+    }
+
+    companion object Factory {
+        fun fromRepresentation(organisation: Organisation): OrganisationEntity {
+            return OrganisationEntity(
+                id = organisation.id,
+                name = organisation.name,
+                avatarUrl = organisation.avatarUrl,
+                plan = organisation.plan,
+                createdAt = organisation.createdAt,
+            )
+        }
+    }
+
 }

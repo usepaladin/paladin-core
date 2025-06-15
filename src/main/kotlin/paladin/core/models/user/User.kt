@@ -10,9 +10,9 @@ data class User(
     override val id: UUID,
     override val name: String,
     override val email: String,
-    val phone: String?,
+    var phone: String?,
     val memberships: List<OrganisationMember> = listOf(),
-    val defaultOrganisation: Organisation? = null,
+    var defaultOrganisation: Organisation? = null,
     override val avatarUrl: String? = null,
     override val createdAt: ZonedDateTime
 ) : UserProfile(id, name, email, avatarUrl, createdAt) {

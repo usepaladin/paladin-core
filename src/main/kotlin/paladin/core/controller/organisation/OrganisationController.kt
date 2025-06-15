@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*
 import paladin.core.enums.organisation.OrganisationRoles
 import paladin.core.models.organisation.Organisation
 import paladin.core.models.organisation.OrganisationMember
+import paladin.core.models.organisation.request.OrganisationCreationRequest
 import paladin.core.service.organisation.OrganisationService
 import java.util.*
 
@@ -32,10 +33,9 @@ class OrganisationController(
     }
 
     @PostMapping("/")
-    fun createOrganisation(@RequestBody organisation: Organisation): ResponseEntity<Organisation> {
+    fun createOrganisation(@RequestBody organisation: OrganisationCreationRequest): ResponseEntity<Organisation> {
         val createdOrganisation: Organisation = this.organisationService.createOrganisation(
-            name = organisation.name,
-            plan = organisation.plan
+            organisation
         )
 
         return ResponseEntity.status(HttpStatus.CREATED).body(createdOrganisation)

@@ -16,13 +16,13 @@ data class OrganisationMemberEntity(
     val id: OrganisationMemberKey,
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "user_role", nullable = false, updatable = true)
+    @Column(name = "role", nullable = false, updatable = true)
     var role: OrganisationRoles,
 
     @Column(name = "member_since", nullable = false, updatable = false)
     val memberSince: ZonedDateTime = ZonedDateTime.now(),
 ) {
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", referencedColumnName = "id", insertable = false, updatable = false)
     var user: UserEntity? = null
 

@@ -36,6 +36,10 @@ data class UserEntity(
     @Column(name = "avatar_url")
     var avatarUrl: String? = null,
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "default_organisation_id", referencedColumnName = "id", insertable = true, updatable = true)
+    var defaultOrganisation: OrganisationEntity? = null,
+
     @Column(
         name = "created_at",
         nullable = false,
@@ -44,11 +48,6 @@ data class UserEntity(
 
     @Column(name = "updated_at", nullable = false) var updatedAt: ZonedDateTime = ZonedDateTime.now()
 ) {
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "default_organisation_id", referencedColumnName = "id", insertable = true, updatable = true)
-    var defaultOrganisation: OrganisationEntity? = null
-
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     var organisations: MutableSet<OrganisationMemberEntity> = mutableSetOf()
 
@@ -62,4 +61,5 @@ data class UserEntity(
     fun onPreUpdate() {
         updatedAt = ZonedDateTime.now()
     }
+    
 }
