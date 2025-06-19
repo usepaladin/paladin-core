@@ -44,7 +44,7 @@ class OrganisationService(
     @Throws(AccessDeniedException::class, IllegalArgumentException::class)
     @Transactional
     fun createOrganisation(request: OrganisationCreationRequest): Organisation {
-        val (name, avatarUrl, plan, default) = request
+        val (name, avatarUrl, plan, isDefault) = request
         // Gets the user ID from the auth token to act as the Organisation creator
         val userId: UUID = authTokenService.getUserId()
         if (plan == OrganisationPlan.ENTERPRISE) {
@@ -77,7 +77,7 @@ class OrganisationService(
         userProfileService.getUserFromSession().let {
             // Membership array should be empty until transaction is over. Meaning we can determine if this is the first organisation made by the user
             // Can also manually specify for the organisation to become the new default
-            if (it.memberships.isEmpty() || default) {
+            if (it.memberships.isEmpty() || isDefault) {
                 it.apply {
                     defaultOrganisation = organisation
                 }.run {
