@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS "organisations"
 (
     "id"           UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
     "name"         VARCHAR(100)     NOT NULL UNIQUE,
+    "avatar_url"   TEXT,
     "member_count" INTEGER          NOT NULL DEFAULT 0,
     "created_at"   TIMESTAMP WITH TIME ZONE  DEFAULT CURRENT_TIMESTAMP,
     "updated_at"   TIMESTAMP WITH TIME ZONE  DEFAULT CURRENT_TIMESTAMP
@@ -80,7 +81,7 @@ $$;
 
 CREATE TYPE ORGANISATION_ROLE AS ENUM ('OWNER', 'ADMIN', 'DEVELOPER', 'READONLY');
 
-CREATE TABLE IF NOT EXISTS ORGANISATION_MEMBERS
+CREATE TABLE IF NOT EXISTS "organisation_members"
 (
     "id"              UUID PRIMARY KEY  NOT NULL DEFAULT uuid_generate_v4(),
     "organisation_id" UUID              NOT NULL REFERENCES organisations (id) ON DELETE CASCADE,
@@ -98,7 +99,7 @@ CREATE INDEX idx_organisation_members_user_id
 
 CREATE TYPE ORGANISATION_INVITE_STATUS AS ENUM ('PENDING', 'ACCEPTED', 'DECLINED', 'EXPIRED');
 
-CREATE TABLE IF NOT EXISTS ORGANISATION_INVITES
+CREATE TABLE IF NOT EXISTS "organisation_invites"
 (
     "id"              UUID PRIMARY KEY  NOT NULL DEFAULT uuid_generate_v4(),
     "organisation_id" UUID              NOT NULL REFERENCES organisations (id) ON DELETE CASCADE,
@@ -161,26 +162,43 @@ CREATE POLICY "Users can view their own organisations" on organisations
     );
 
 /* Add Organisation Roles to Supabase JWT */
-CREATE FUNCTION public.custom_access_token_hook()
+CREATE or replace FUNCTION public.custom_access_token_hook(event jsonb)
     RETURNS jsonb
     LANGUAGE plpgsql
-    SECURITY definer
-    SET search_path = public
+    stable
 AS
 $$
 DECLARE
+    claims jsonb;
     _roles jsonb;
 BEGIN
     SELECT coalesce(
                    jsonb_agg(jsonb_build_object('organisation_id', organisation_id, 'role', role)),
                    '[]'::jsonb)
     INTO _roles
-    FROM organisation_members
-    WHERE user_id = (auth.uid());
-    RETURN jsonb_build_object('roles', _roles);
+    FROM public.organisation_members
+    WHERE user_id = (event ->> 'user_id')::uuid;
+    claims := event -> 'claims';
+    claims := jsonb_set(claims, '{roles}', _roles, true);
+    event := jsonb_set(event, '{claims}', claims, true);
+    RETURN event;
 END;
 $$;
 
+grant usage on schema public to supabase_auth_admin;
 
-GRANT ALL ON FUNCTION public.custom_access_token_hook TO supabase_auth_admin;
+grant execute
+    on function public.custom_access_token_hook
+    to supabase_auth_admin;
+revoke execute
+    on function public.custom_access_token_hook
+    from authenticated, anon, public;
 
+grant all on table public.organisations to supabase_auth_admin;
+grant all on table public.user_profiles to supabase_auth_admin;
+grant all on table public.organisation_members to supabase_auth_admin;
+
+create policy "Allow auth admin to read organisation member roles" ON public.organisation_members
+    as permissive for select
+    to supabase_auth_admin
+    using (true);

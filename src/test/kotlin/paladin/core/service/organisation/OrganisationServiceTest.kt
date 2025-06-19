@@ -1,22 +1,17 @@
 package paladin.core.service.organisation
 
-import ch.qos.logback.classic.Level
-import ch.qos.logback.classic.Logger
-import io.github.oshai.kotlinlogging.KLogger
-import io.github.oshai.kotlinlogging.KotlinLogging
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito
 import org.mockito.junit.jupiter.MockitoExtension
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import paladin.core.configuration.properties.SecurityConfigurationProperties
 import paladin.core.entities.organisation.OrganisationEntity
 import paladin.core.entities.organisation.OrganisationMemberEntity
 import paladin.core.entities.user.UserEntity
@@ -25,9 +20,7 @@ import paladin.core.models.organisation.Organisation
 import paladin.core.models.organisation.OrganisationMember
 import paladin.core.repository.organisation.OrganisationMemberRepository
 import paladin.core.repository.organisation.OrganisationRepository
-import paladin.core.service.auth.AuthTokenService
 import util.OrganisationRole
-import util.TestLogAppender
 import util.WithUserPersona
 import util.factory.MockOrganisationEntityFactory
 import util.factory.MockUserEntityFactory
@@ -61,7 +54,7 @@ class OrganisationServiceTest {
 
     // Organisation Id to test access control with an org a user is not apart of
     private val organisationId3 = UUID.fromString("d8b1c2d3-4e5f-6789-abcd-ef9876543210")
-
+    
     @MockitoBean
     private lateinit var organisationRepository: OrganisationRepository
 

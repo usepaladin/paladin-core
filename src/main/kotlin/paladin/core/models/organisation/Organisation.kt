@@ -8,6 +8,7 @@ import java.util.*
 data class Organisation(
     val id: UUID,
     val name: String,
+    val avatarUrl: String? = null,
     val plan: OrganisationPlan,
     val memberCount: Int,
     val createdAt: ZonedDateTime,
@@ -19,6 +20,7 @@ data class Organisation(
                 id = entity.id ?: throw IllegalArgumentException("OrganisationEntity must have a non-null id"),
                 name = entity.name,
                 plan = entity.plan,
+                avatarUrl = entity.avatarUrl,
                 members = if (includeMembers) {
                     entity.members.map { OrganisationMember.fromEntity(it) }
                 } else {

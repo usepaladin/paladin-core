@@ -12,9 +12,11 @@ import paladin.core.enums.organisation.OrganisationRoles
 import paladin.core.exceptions.NotFoundException
 import paladin.core.models.organisation.Organisation
 import paladin.core.models.organisation.OrganisationMember
+import paladin.core.models.organisation.request.OrganisationCreationRequest
 import paladin.core.repository.organisation.OrganisationMemberRepository
 import paladin.core.repository.organisation.OrganisationRepository
 import paladin.core.service.auth.AuthTokenService
+import paladin.core.service.user.UserProfileService
 import paladin.core.util.ServiceUtil.findOrThrow
 import java.util.*
 
@@ -22,6 +24,7 @@ import java.util.*
 class OrganisationService(
     private val organisationRepository: OrganisationRepository,
     private val organisationMemberRepository: OrganisationMemberRepository,
+    private val userProfileService: UserProfileService,
     private val logger: KLogger,
     private val authTokenService: AuthTokenService
 ) {
@@ -40,7 +43,8 @@ class OrganisationService(
      */
     @Throws(AccessDeniedException::class, IllegalArgumentException::class)
     @Transactional
-    fun createOrganisation(name: String, plan: OrganisationPlan): Organisation {
+    fun createOrganisation(request: OrganisationCreationRequest): Organisation {
+        val (name, avatarUrl, plan, isDefault) = request
         // Gets the user ID from the auth token to act as the Organisation creator
         val userId: UUID = authTokenService.getUserId()
         if (plan == OrganisationPlan.ENTERPRISE) {
@@ -50,6 +54,7 @@ class OrganisationService(
         // Create and save the organisation entity
         val organisation: Organisation = OrganisationEntity(
             name = name,
+            avatarUrl = avatarUrl,
             plan = plan,
         ).run {
             organisationRepository.save(this).let { entity ->
@@ -63,23 +68,32 @@ class OrganisationService(
             userId = userId
         )
 
-        val member: OrganisationMember = OrganisationMemberEntity(key, OrganisationRoles.OWNER).run {
-            organisationMemberRepository.save(this).let { entity ->
-                OrganisationMember.fromEntity(entity)
+        OrganisationMemberEntity(key, OrganisationRoles.OWNER).run {
+            organisationMemberRepository.save(this)
+        }
+
+        // If this is the first organisation for the user, update their profile to make it their default
+
+        userProfileService.getUserFromSession().let {
+            // Membership array should be empty until transaction is over. Meaning we can determine if this is the first organisation made by the user
+            // Can also manually specify for the organisation to become the new default
+            if (it.memberships.isEmpty() || isDefault) {
+                it.apply {
+                    defaultOrganisation = organisation
+                }.run {
+                    userProfileService.updateUserDetails(this)
+                }
             }
         }
 
-        // Update the organisation with the first member
-        return organisation.copy(
-            members = listOf(member),
-            memberCount = 1
-        )
+        return organisation
     }
 
     @PreAuthorize("@organisationSecurity.hasOrgRoleOrHigher(#organisation.id, 'ADMIN')")
     fun updateOrganisation(organisation: Organisation): Organisation {
         findOrThrow(organisation.id, organisationRepository::findById).run {
             val entity = this.apply {
+                avatarUrl = organisation.avatarUrl
                 name = organisation.name
                 plan = organisation.plan
             }

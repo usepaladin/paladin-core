@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KLogger
 import jakarta.transaction.Transactional
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.stereotype.Service
+import paladin.core.entities.organisation.OrganisationEntity
 import paladin.core.exceptions.NotFoundException
 import paladin.core.models.user.User
 import paladin.core.models.user.UserProfile
@@ -49,6 +50,9 @@ class UserProfileService(
             email = user.email
             avatarUrl = user.avatarUrl
             phone = user.phone
+            defaultOrganisation = user.defaultOrganisation?.let { org ->
+                OrganisationEntity.fromRepresentation(org)
+            }
         }.run {
             repository.save(this)
             logger.info { "Updated user profile with ID: ${this.id}" }

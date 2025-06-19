@@ -17,3 +17,6 @@ paladin:
   security:
     jwt-secret-key: test-secret-1234567890abcdef1234567890abcdef
     jwt-issuer: https://mskkfvtffgkadegdabft.supabase.co/auth/v1
+    allowed-origins:
+      - http://localhost:3000
+      - http://localhost:8080
