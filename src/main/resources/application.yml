@@ -23,6 +23,8 @@ paladin:
     allowed-origins:
       - ${ORIGIN_API_URL}
   include-stack-trace: true
+  standalone: false
+  require-data-encryption: true
 springdoc:
   api-docs:
     path: /docs/v3/api-docs
