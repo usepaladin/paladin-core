@@ -9,7 +9,6 @@ import java.util.*
 @Entity
 @Table(
     name = "user_profiles",
-    schema = "public",
     uniqueConstraints = [
         UniqueConstraint(name = "uc_profiles_email", columnNames = ["email"]),
         UniqueConstraint(name = "uc_profiles_phone", columnNames = ["phone"])
@@ -61,5 +60,5 @@ data class UserEntity(
     fun onPreUpdate() {
         updatedAt = ZonedDateTime.now()
     }
-    
+
 }

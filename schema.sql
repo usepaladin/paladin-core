@@ -118,6 +118,49 @@ CREATE INDEX idx_invite_token ON public.organisation_invites (invite_code);
 alter table organisation_invites
     add constraint uq_invite_code unique (invite_code);
 
+CREATE TABLE IF NOT EXISTS "organisation_cluster"
+(
+    id                UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+    organisation_id   UUID             NOT NULL REFERENCES organisations (id) ON DELETE CASCADE,
+    name              VARCHAR(255)     NOT NULL,
+    bootstrap_servers TEXT,         -- Comma-separated bootstrap URLs
+    auth_mechanism    VARCHAR(50),  -- e.g., SASL/PLAIN, SASL/OAUTHBEARER
+    username          VARCHAR(255), -- SASL username or API key
+    password          TEXT,         -- Encrypted password or API secret
+    created_at        TIMESTAMP WITH TIME ZONE  DEFAULT CURRENT_TIMESTAMP,
+    updated_at        TIMESTAMP WITH TIME ZONE  DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE organisation_cluster
+    ADD CONSTRAINT uq_organisation_cluster UNIQUE (organisation_id, name);
+
+CREATE INDEX idx_organisation_cluster_org_id ON public.organisation_cluster (organisation_id);
+
+alter table organisation_cluster
+    enable row level security;
+
+-- Ensure only organisation members can view their clusters
+CREATE POLICY "Users can view their own organisation clusters" on organisation_cluster
+    FOR SELECT
+    TO authenticated
+    USING (
+    organisation_id IN (SELECT organisation_id
+                        FROM organisation_members
+                        WHERE user_id = auth.uid())
+    );
+
+-- Ensure only organisation members who are [OWNER, ADMIN, or DEVELOPER] can insert, update, or delete clusters
+CREATE POLICY "Users can manage their own organisation clusters" on organisation_cluster
+    FOR ALL
+    TO authenticated
+    USING (
+    organisation_id IN (SELECT organisation_id
+                        FROM organisation_members
+                        WHERE user_id = auth.uid()
+                          AND role IN ('OWNER', 'ADMIN', 'DEVELOPER'))
+    );
+
+
 -- Function to update member count
 CREATE OR REPLACE FUNCTION public.update_org_member_count()
     RETURNS TRIGGER AS

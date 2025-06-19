@@ -1,6 +1,7 @@
 package paladin.core.entities.organisation
 
 import jakarta.persistence.*
+import paladin.core.entities.cluster.OrganisationClusterEntity
 import paladin.core.enums.organisation.OrganisationPlan
 import paladin.core.models.organisation.Organisation
 import java.time.ZonedDateTime
@@ -9,7 +10,6 @@ import java.util.*
 @Entity
 @Table(
     name = "organisations",
-    schema = "public",
     uniqueConstraints = [
         UniqueConstraint(name = "organisation_name_unique", columnNames = ["name"])
     ]
@@ -41,6 +41,12 @@ data class OrganisationEntity(
 ) {
     @OneToMany(mappedBy = "organisation", cascade = [CascadeType.ALL], fetch = FetchType.LAZY, orphanRemoval = true)
     var members: MutableSet<OrganisationMemberEntity> = mutableSetOf()
+
+    @OneToMany(mappedBy = "organisation", cascade = [CascadeType.ALL], fetch = FetchType.LAZY, orphanRemoval = true)
+    var invites: MutableSet<OrganisationInviteEntity> = mutableSetOf()
+
+    @OneToMany(mappedBy = "organisation", cascade = [CascadeType.ALL], fetch = FetchType.LAZY, orphanRemoval = true)
+    var clusters: MutableSet<OrganisationClusterEntity> = mutableSetOf()
 
     @PrePersist
     fun onPrePersist() {

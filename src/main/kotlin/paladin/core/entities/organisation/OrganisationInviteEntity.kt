@@ -10,7 +10,6 @@ import java.util.*
 @Entity
 @Table(
     name = "organisation_invites",
-    schema = "public",
     uniqueConstraints = [
         UniqueConstraint(
             name = "uc_organisation_invites_email",

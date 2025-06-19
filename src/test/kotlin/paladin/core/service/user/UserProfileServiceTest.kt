@@ -15,12 +15,14 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import paladin.core.entities.organisation.OrganisationEntity
 import paladin.core.entities.user.UserEntity
 import paladin.core.models.user.User
 import paladin.core.repository.user.UserProfileRepository
 import paladin.core.service.auth.AuthTokenService
 import util.TestLogAppender
 import util.WithUserPersona
+import util.factory.MockOrganisationEntityFactory
 import util.factory.MockUserEntityFactory
 import java.util.*
 
@@ -133,6 +135,47 @@ class UserProfileServiceTest {
             }.run {
                 assertNotNull(this) { "Display name should not be null" }
                 assert(this == it.name) { "User display name does not match expected display name from session" }
+            }
+        }
+    }
+
+    @WithUserPersona(
+        userId = "f8b1c2d3-4e5f-6789-abcd-ef0123456789",
+        email = "email@email.com",
+        displayName = "Jared Tucker"
+    )
+    @Test
+    fun `handle user update default organisation`() {
+        val organisation: OrganisationEntity = MockOrganisationEntityFactory.createOrganisation(
+            name = "Test Organisation 1",
+        )
+
+        val organisation2: OrganisationEntity = MockOrganisationEntityFactory.createOrganisation(
+            name = "Test Organisation 2",
+        )
+
+        val entity: UserEntity = MockUserEntityFactory.createUser(
+            id = userId,
+            name = "Jared Tucker",
+            email = "email@email.com"
+        ).apply {
+            defaultOrganisation = organisation
+        }
+
+        Mockito.`when`(userProfileRepository.findById(userId)).thenReturn(Optional.of(entity))
+
+        val updatedEntity = entity.apply {
+            defaultOrganisation = organisation2
+        }
+
+        val userRepresentation = User.fromEntity(updatedEntity)
+
+        Mockito.`when`(userProfileRepository.save(any())).thenReturn(updatedEntity)
+        userProfileService.updateUserDetails(userRepresentation).let {
+            assert(it.id == userId) { "User ID does not match expected ID" }
+            assert(it.name == entity.displayName) { "User name does not match expected name" }
+            assert(it.defaultOrganisation?.id == organisation2.id) {
+                "Default organisation ID does not match expected ID"
             }
         }
     }
